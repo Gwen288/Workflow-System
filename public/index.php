@@ -45,6 +45,7 @@ $router->get('/approvals', [RequestController::class, 'approvals']);
 $router->get('/my-requests', [RequestController::class, 'myRequests']);
 $router->get('/requests/create', [RequestController::class, 'create']);
 $router->post('/requests/store', [RequestController::class, 'store']);
+$router->get('/requests/search', [RequestController::class, 'search']);
 $router->get('/requests/{id}', [RequestController::class, 'show']);
 $router->post('/requests/{id}/approve', [RequestController::class, 'approve']);
 $router->post('/requests/{id}/reject', [RequestController::class, 'reject']);

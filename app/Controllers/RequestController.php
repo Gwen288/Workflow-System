@@ -21,6 +21,38 @@ class RequestController extends Controller {
         $this->view('requests/index', ['requests' => $requests]);
     }
 
+    public function search() {
+        header('Content-Type: application/json');
+        $query = $_GET['q'] ?? '';
+        $listType = $_GET['list'] ?? 'approvals'; // approvals, myRequests, all
+        
+        $requestModel = new Request();
+        if ($listType === 'myRequests') {
+            $requests = $requestModel->getSubmittedByUser(auth());
+        } elseif ($listType === 'all' && auth_user()['role'] === 'Admin') {
+            $requests = $requestModel->getWithDetails();
+        } else {
+            $requests = $requestModel->getPendingForUser(auth());
+        }
+
+        // Apply filtering natively in PHP
+        if (!empty($query)) {
+            $query = strtolower($query);
+            $requests = array_filter($requests, function($req) use ($query) {
+                // Check code, workflow_name, submitter_name, status
+                $code = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $req['workflow_name']), 0, 3)) . '-' . date('Y', strtotime($req['submission_date'])) . '-' . str_pad($req['request_id'], 3, '0', STR_PAD_LEFT);
+                
+                return str_contains(strtolower($code), $query) ||
+                       str_contains(strtolower($req['workflow_name']), $query) ||
+                       str_contains(strtolower($req['submitter_name']), $query) ||
+                       str_contains(strtolower($req['status']), $query);
+            });
+        }
+        
+        echo json_encode(array_values($requests));
+        exit;
+    }
+
     public function approvals() {
         if (auth_user()['role'] === 'Student') {
             $this->redirect('/my-requests');
@@ -109,12 +141,17 @@ class RequestController extends Controller {
     }
 
     public function approve($id) {
-        $comment = $_POST['comment'] ?? '';
+        $data = json_decode(file_get_contents("php://input"), true) ?: $_POST;
+        $comment = $data['comment'] ?? '';
         $this->processDecision($id, 'Approved', $comment);
     }
 
     public function reject($id) {
-        $comment = $_POST['comment'] ?? '';
+        $data = json_decode(file_get_contents("php://input"), true) ?: $_POST;
+        $comment = $data['comment'] ?? '';
+        if (empty(trim($comment))) {
+            return $this->json(['error' => 'A rejection must include a comment.'], 400);
+        }
         $this->processDecision($id, 'Rejected', $comment);
     }
 
@@ -139,23 +176,40 @@ class RequestController extends Controller {
         ]);
 
         // Next phase logic can be handled by AI Service or hardcoded flow
-        $aiService = new AIService();
-        if ($decision === 'Approved') {
-            $pastSteps = count($approvalModel->getStepsForRequest($id));
-            $nextApprover = $aiService->suggestNextApprover($request['workflow_type'], $request['priority_level'], $pastSteps + 1);
-            
-            if ($nextApprover) {
-                // Route to next approver
+        if ($request['status'] === 'Escalated') {
+            $userModel = new \App\Models\User();
+            $registryUsers = $userModel->findByRole('Registry');
+            $registryId = !empty($registryUsers) ? $registryUsers[0]['user_id'] : null;
+
+            if ($registryId) {
+                // Bounce back to Registry
                 $requestModel->update($id, [
-                    'current_approver' => $nextApprover['user_id'],
+                    'current_approver' => $registryId,
                     'status' => 'Pending'
                 ]);
             } else {
-                // Final approval
-                $requestModel->update($id, ['status' => 'Approved', 'current_approver' => null]);
+                // Fallback if no registry exists
+                $requestModel->update($id, ['status' => $decision === 'Approved' ? 'Approved' : 'Rejected', 'current_approver' => null]);
             }
         } else {
-             $requestModel->update($id, ['status' => 'Rejected', 'current_approver' => null]);
+            $aiService = new AIService();
+            if ($decision === 'Approved') {
+                $pastSteps = count($approvalModel->getStepsForRequest($id));
+                $nextApprover = $aiService->suggestNextApprover($request['workflow_type'], $request['priority_level'], $pastSteps + 1);
+                
+                if ($nextApprover) {
+                    // Route to next approver
+                    $requestModel->update($id, [
+                        'current_approver' => $nextApprover['user_id'],
+                        'status' => 'Pending'
+                    ]);
+                } else {
+                    // Final approval
+                    $requestModel->update($id, ['status' => 'Approved', 'current_approver' => null]);
+                }
+            } else {
+                 $requestModel->update($id, ['status' => 'Rejected', 'current_approver' => null]);
+            }
         }
 
         // Audit Log

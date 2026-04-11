@@ -1,7 +1,8 @@
 <div class="max-w-4xl mx-auto">
     <div class="mb-6 flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-800">Request Details #<?= $request['request_id'] ?></h1>
-        <a href="/dashboard" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded shadow transition font-medium">
+        <?php $backUrl = auth_user()['role'] === 'Student' ? url('/dashboard') : url('/approvals'); ?>
+        <a href="<?= $backUrl ?>" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded shadow transition font-medium">
             &larr; Back to Dashboard
         </a>
     </div>
@@ -31,6 +32,30 @@
                 <p><?= date('M j, Y H:i', strtotime($request['submission_date'])) ?></p>
             </div>
         </div>
+
+        <!-- Render Actual Form Data -->
+        <?php if(!empty($request['metadata_json'])): 
+            $meta = json_decode($request['metadata_json'], true); 
+            if(is_array($meta)): ?>
+            <div id="form-details" class="mt-6 border-t pt-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Form Details
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-inner">
+                    <?php foreach($meta as $key => $val): ?>
+                        <?php if(!empty($val) && $key !== 'workflow_type'): ?>
+                        <div>
+                            <span class="block text-xs font-bold text-gray-500 uppercase tracking-wide"><?= htmlspecialchars(str_replace('_', ' ', $key)) ?></span>
+                            <span class="block text-sm text-gray-900 font-medium mt-0.5"><?= is_array($val) ? implode(', ', array_map('htmlspecialchars', $val)) : nl2br(htmlspecialchars($val)) ?></span>
+                        </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php 
+            endif;
+        endif; ?>
 
         <?php if ($request['current_approver'] == auth() && in_array($request['status'], ['Pending', 'Escalated'])): ?>
         <div class="mt-8 border-t pt-4" id="action-panel">

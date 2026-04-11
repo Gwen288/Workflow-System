@@ -27,10 +27,11 @@ class Request extends Model {
     }
 
     public function getSubmittedByUser($userId) {
-        $sql = "SELECT r.*, w.name as workflow_name, u.name as approver_name
+        $sql = "SELECT r.*, w.name as workflow_name, u1.name as submitter_name, u2.name as approver_name
                 FROM {$this->table} r
                 JOIN Workflow w ON r.workflow_type = w.workflow_id
-                LEFT JOIN User u ON r.current_approver = u.user_id
+                JOIN User u1 ON r.submitted_by = u1.user_id
+                LEFT JOIN User u2 ON r.current_approver = u2.user_id
                 WHERE r.submitted_by = ?
                 ORDER BY r.submission_date DESC";
         return $this->rawQuery($sql, [$userId]);

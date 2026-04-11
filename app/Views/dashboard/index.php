@@ -1,9 +1,8 @@
 <?php
-    $pendingCount = count($pendingRequests ?? []);
-    // Using some simulated data for the other cards to match aesthetics or fallback to insights
-    $overdueCount = 2; // Simulated or use a future insight metric
-    $cycleTime = "3.7"; 
-    $approvalRate = "94";
+    $pendingCount = $metrics['pendingCount'] ?? count($pendingRequests ?? []);
+    $overdueCount = $metrics['overdueCount'] ?? 0;
+    $cycleTime = $metrics['cycleTime'] ?? "0.0"; 
+    $approvalRate = $metrics['approvalRate'] ?? "0";
 ?>
 <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Dashboard Overview</h1>

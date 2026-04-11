@@ -6,15 +6,17 @@
             <h1 class="text-3xl font-bold text-gray-900 tracking-tight">My Approvals</h1>
             <p class="text-gray-500 mt-1"><?= count($requests) ?> requests awaiting your action</p>
         </div>
-        <div class="flex space-x-3">
+        <div class="flex space-x-3 w-full md:w-auto mt-4 md:mt-0">
+            <!-- Search -->
+            <div class="relative w-full md:w-64">
+                <input type="text" id="ajax-search" placeholder="Search requests..." class="w-full bg-white border border-gray-200 text-gray-700 px-4 py-2 pl-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            
             <!-- Filters -->
             <button class="bg-white border text-gray-700 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-50 transition flex items-center space-x-2">
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                <span>All Types</span>
-            </button>
-            <button class="bg-white border text-gray-700 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-50 transition flex items-center justify-between min-w-[140px]">
-                <span>All Status</span>
-                <svg class="w-4 h-4 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                <span class="hidden sm:inline">All Types</span>
             </button>
         </div>
     </div>
@@ -68,7 +70,7 @@
                     <th class="px-6 py-4">Action</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody id="request-table-body" class="divide-y divide-gray-100">
                 <?php if (empty($requests)): ?>
                 <tr>
                     <td colspan="7" class="px-6 py-12 text-center text-gray-500">
@@ -116,7 +118,13 @@
                         <!-- Current Stage -->
                         <td class="px-6 py-4">
                             <div class="flex flex-col">
-                                <span class="text-gray-700 font-medium text-sm"><?= htmlspecialchars(auth_user()['role']) ?> Review</span>
+                                <?php 
+                                    $stageLabel = auth_user()['role'] . ' Review';
+                                    if (isset($isMyRequests)) {
+                                        $stageLabel = ($req['status'] === 'Approved') ? 'Completed' : ($req['approver_name'] ? htmlspecialchars($req['approver_name']) . ' Reviewing' : 'System Processing');
+                                    }
+                                ?>
+                                <span class="text-gray-700 font-medium text-sm"><?= $stageLabel ?></span>
                             </div>
                         </td>
                         <!-- Days Open -->
@@ -134,9 +142,17 @@
                         </td>
                         <!-- Action -->
                         <td class="px-6 py-4">
-                            <a href="<?= url('/requests/' . $req['request_id']) ?>" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition-colors shadow-sm inline-block">
-                                Review
-                            </a>
+                            <div class="flex space-x-2">
+                                <?php if(isset($isMyRequests)): ?>
+                                <a href="<?= url('/requests/' . $req['request_id']) ?>" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition-colors shadow-sm inline-block whitespace-nowrap">
+                                    View Details
+                                </a>
+                                <?php else: ?>
+                                <a href="<?= url('/requests/' . $req['request_id']) ?>" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition-colors shadow-sm inline-block whitespace-nowrap">
+                                    Review
+                                </a>
+                                <?php endif; ?>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -146,3 +162,95 @@
     </div>
 
 </div>
+
+<script>
+    const searchInput = document.getElementById('ajax-search');
+    const tableBody = document.getElementById('request-table-body');
+    const listType = '<?= isset($isMyRequests) ? "myRequests" : "approvals" ?>';
+    const baseUrl = '<?= rtrim(url('/'), '/') ?>';
+
+    let timeout = null;
+    searchInput.addEventListener('input', function(e) {
+        clearTimeout(timeout);
+        const query = e.target.value;
+        
+        timeout = setTimeout(() => {
+            tableBody.style.opacity = '0.5';
+            
+            fetch(`${baseUrl}/requests/search?q=${encodeURIComponent(query)}&list=${listType}`)
+                .then(response => response.json())
+                .then(data => {
+                    let html = '';
+                    if (data.length === 0) {
+                        html = `<tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span class="text-gray-500">No requests found matching "${query}"</span>
+                                </div>
+                            </td>
+                        </tr>`;
+                    } else {
+                        data.forEach(req => {
+                            const date = new Date(req.submission_date.replace(' ', 'T'));
+                            const diffTime = Math.abs(new Date() - date);
+                            const daysOpen = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            const nameStr = req.workflow_name || '';
+                            const cleanStr = nameStr.replace(/[^a-zA-Z]/g, '');
+                            const typePrefix = cleanStr.substring(0, 3).toUpperCase();
+                            const reqIdStr = String(req.request_id).padStart(3, '0');
+                            const reqCode = `${typePrefix}-${date.getFullYear()}-${reqIdStr}`;
+                            
+                            const isOverdue = daysOpen >= 5 && (req.status === 'Pending' || req.status === 'Escalated');
+                            const statusClass = isOverdue ? 'bg-red-50 text-red-600 border-red-100' : 'bg-orange-50 text-orange-600 border-orange-100';
+                            const statusText = req.status === 'Approved' ? 'Approved' : (req.status === 'Rejected' ? 'Rejected' : (isOverdue ? 'Overdue' : 'In Progress'));
+                            
+                            let daysColorClass = 'text-green-600';
+                            if (daysOpen >= 5) daysColorClass = 'text-red-600';
+                            else if (daysOpen >= 3) daysColorClass = 'text-orange-600';
+                            
+                            const formattedDate = (date.getMonth()+1) + '/' + date.getDate() + '/' + date.getFullYear();
+
+                            html += `
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-6 py-4"><span class="font-semibold text-blue-600">${reqCode}</span></td>
+                                <td class="px-6 py-4"><span class="text-gray-700 font-medium">${req.workflow_name}</span></td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-gray-900 font-semibold text-sm">${req.submitter_name}</span>
+                                        <span class="text-gray-500 text-xs mt-0.5">${formattedDate}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-gray-700 font-medium text-sm">${listType === 'myRequests' ? (req.approver_name ? req.approver_name + ' Reviewing' : 'System Processing') : '<?= htmlspecialchars(auth_user()['role']) ?> Review'}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-1.5 ${daysColorClass} font-medium text-sm">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <span>${daysOpen} days</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${statusClass}">
+                                        ${statusText}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex space-x-2">
+                                        <a href="${baseUrl}/requests/${req.request_id}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition-colors shadow-sm inline-block whitespace-nowrap">
+                                            ${listType === 'myRequests' ? 'View Details' : 'Review'}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            `;
+                        });
+                    }
+                    
+                    tableBody.innerHTML = html;
+                    tableBody.style.opacity = '1';
+                });
+        }, 300);
+    });
+</script>
