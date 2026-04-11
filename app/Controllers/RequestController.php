@@ -1,0 +1,189 @@
+<?php
+namespace App\Controllers;
+
+use App\Core\Controller;
+use App\Models\Request;
+use App\Models\Workflow;
+use App\Models\AuditLog;
+use App\Models\ApprovalStep;
+use App\Services\AIService;
+
+class RequestController extends Controller {
+    public function __construct() {
+        if (!auth()) {
+            $this->redirect('/login');
+        }
+    }
+
+    public function index() {
+        $requestModel = new Request();
+        $requests = $requestModel->getWithDetails();
+        $this->view('requests/index', ['requests' => $requests]);
+    }
+
+    public function create() {
+        $workflowModel = new Workflow();
+        $workflows = $workflowModel->all();
+        $this->view('requests/create', ['workflows' => $workflows]);
+    }
+
+    public function store() {
+        $aiService = new AIService();
+        $workflowId = $_POST['workflow_type'] ?? null;
+        $priority = $_POST['priority_level'] ?? 'Medium';
+        
+        $nextApprover = $aiService->suggestNextApprover($workflowId, $priority);
+
+        $requestModel = new Request();
+        $requestId = $requestModel->create([
+            'workflow_type' => $workflowId,
+            'submitted_by' => auth(),
+            'status' => 'Pending',
+            'current_approver' => $nextApprover['user_id'],
+            'priority_level' => $priority
+        ]);
+
+        $auditLogModel = new AuditLog();
+        $auditLogModel->create([
+            'request_id' => $requestId,
+            'action' => 'Created',
+            'performed_by' => auth(),
+            'comment' => 'Request submitted'
+        ]);
+
+        $this->redirect('/dashboard');
+    }
+
+    public function show($id) {
+        $requestModel = new Request();
+        $request = $requestModel->find($id);
+
+        if (!$request) {
+            die("Request not found");
+        }
+
+        $auditLogModel = new AuditLog();
+        $logs = $auditLogModel->getLogsForRequest($id);
+
+        $this->view('requests/show', [
+            'request' => $request,
+            'logs' => $logs
+        ]);
+    }
+
+    public function approve($id) {
+        $comment = $_POST['comment'] ?? '';
+        $this->processDecision($id, 'Approved', $comment);
+    }
+
+    public function reject($id) {
+        $comment = $_POST['comment'] ?? '';
+        $this->processDecision($id, 'Rejected', $comment);
+    }
+
+    public function processDecision($id, $decision, $comment) {
+        $requestModel = new Request();
+        $request = $requestModel->find($id);
+
+        if ($request['current_approver'] != auth()) {
+            return $this->json(['error' => 'Not authorized'], 403);
+        }
+
+        $status = $decision === 'Approved' ? 'Approved' : 'Rejected';
+
+        // Add to approval steps
+        $approvalModel = new ApprovalStep();
+        $approvalModel->create([
+            'request_id' => $id,
+            'approver_role' => auth_user()['role'],
+            'status' => $decision,
+            'decision' => $decision,
+            'comment' => $comment
+        ]);
+
+        // Next phase logic can be handled by AI Service or hardcoded flow
+        $aiService = new AIService();
+        if ($decision === 'Approved') {
+            $pastSteps = count($approvalModel->getStepsForRequest($id));
+            $nextApprover = $aiService->suggestNextApprover($request['workflow_type'], $request['priority_level'], $pastSteps + 1);
+            
+            if ($nextApprover) {
+                // Route to next approver
+                $requestModel->update($id, [
+                    'current_approver' => $nextApprover['user_id'],
+                    'status' => 'Pending'
+                ]);
+            } else {
+                // Final approval
+                $requestModel->update($id, ['status' => 'Approved', 'current_approver' => null]);
+            }
+        } else {
+             $requestModel->update($id, ['status' => 'Rejected', 'current_approver' => null]);
+        }
+
+        // Audit Log
+        $auditLogModel = new AuditLog();
+        $auditLogModel->create([
+            'request_id' => $id,
+            'action' => $decision,
+            'performed_by' => auth(),
+            'comment' => $comment
+        ]);
+
+        // Check for AJAX response
+        if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
+            return $this->json(['success' => true, 'status' => $decision]);
+        }
+        $this->redirect('/dashboard');
+    }
+
+    public function escalate($id) {
+        $data = json_decode(file_get_contents("php://input"), true) ?: $_POST;
+        $targetRole = $data['target_role'] ?? '';
+        $comment = $data['comment'] ?? 'Escalated to ' . $targetRole;
+
+        $requestModel = new Request();
+        $request = $requestModel->find($id);
+
+        if ($request['current_approver'] != auth()) {
+            return $this->json(['error' => 'Not authorized'], 403);
+        }
+
+        // Find user by role
+        $userModel = new \App\Models\User();
+        $candidates = $userModel->findByRole($targetRole);
+        $nextApprover = count($candidates) > 0 ? $candidates[0]['user_id'] : null;
+
+        if (!$nextApprover) {
+            return $this->json(['error' => 'Role not found or no users available'], 400);
+        }
+
+        // Add step record
+        $approvalModel = new ApprovalStep();
+        $approvalModel->create([
+            'request_id' => $id,
+            'approver_role' => auth_user()['role'],
+            'status' => 'Pending',
+            'decision' => 'Escalated',
+            'comment' => $comment
+        ]);
+
+        $requestModel->update($id, [
+            'status' => 'Escalated',
+            'current_approver' => $nextApprover
+        ]);
+
+        $auditLogModel = new AuditLog();
+        $auditLogModel->create([
+            'request_id' => $id,
+            'action' => 'Escalated',
+            'performed_by' => auth(),
+            'comment' => $comment
+        ]);
+
+        if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
+            return $this->json(['success' => true, 'status' => 'Escalated']);
+        }
+        $this->redirect('/dashboard');
+    }
+}
