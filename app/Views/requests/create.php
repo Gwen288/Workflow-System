@@ -25,15 +25,25 @@
                 </div>
 
                 <!-- Universal Details -->
+                <?php if(auth_user()['role'] === 'Student'): ?>
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">Student ID</label>
                     <input type="text" name="metadata[student_id]" placeholder="e.g., PAU2024001" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition" required>
                 </div>
-
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">Student Name</label>
                     <input type="text" name="metadata[student_name]" value="<?= htmlspecialchars(auth_user()['name']) ?>" readonly class="appearance-none block w-full bg-gray-50 text-gray-800 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white shadow-sm cursor-not-allowed">
                 </div>
+                <?php else: ?>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Staff ID / Department Code</label>
+                    <input type="text" name="metadata[staff_id]" placeholder="e.g., HOD-5501" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Staff Name</label>
+                    <input type="text" name="metadata[staff_name]" value="<?= htmlspecialchars(auth_user()['name']) ?>" readonly class="appearance-none block w-full bg-gray-50 text-gray-800 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white shadow-sm cursor-not-allowed">
+                </div>
+                <?php endif; ?>
             </div>
             
             <hr class="border-gray-100 my-8">
@@ -115,6 +125,53 @@
                 </div>
             </div>
             
+            <!-- Dynamic Fields: Budget -->
+            <div id="fields_budget" class="dynamic-fields hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 w-full">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Department Code / Account</label>
+                    <input type="text" name="metadata[budget_department]" placeholder="e.g., COMP-SCI" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Fiscal Year</label>
+                    <input type="text" name="metadata[budget_fiscal_year]" placeholder="e.g., 2026/2027" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 font-semibold mb-2">Amount Requested (GHS)</label>
+                    <input type="number" step="0.01" name="metadata[budget_amount]" placeholder="0.00" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 font-semibold mb-2">Budget Justification</label>
+                    <textarea name="metadata[budget_justification]" rows="3" placeholder="Why is this budget needed? What exactly does it cover?" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:border-blue-400 focus:ring-blue-100"></textarea>
+                </div>
+            </div>
+
+            <!-- Dynamic Fields: Procurement -->
+            <div id="fields_procurement" class="dynamic-fields hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 w-full">
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 font-semibold mb-2">Item Descriptions</label>
+                    <textarea name="metadata[procurement_items]" rows="3" placeholder="List items, quantities, and specific requirements..." class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:border-blue-400 focus:ring-blue-100"></textarea>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Estimated Total Cost (GHS)</label>
+                    <input type="number" step="0.01" name="metadata[procurement_cost]" placeholder="0.00" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Vendor Preferences (if any)</label>
+                    <input type="text" name="metadata[procurement_vendor]" placeholder="e.g., Office Supplies Ltd" class="appearance-none block w-full bg-white border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-gray-700">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 font-semibold mb-2">Urgency Level</label>
+                    <div class="relative">
+                        <select name="metadata[procurement_urgency]" class="block appearance-none w-full bg-white border border-gray-200 text-gray-700 py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
+                            <option value="routine" selected>Routine (1-2 Weeks)</option>
+                            <option value="urgent">Urgent (Within 48 Hours)</option>
+                            <option value="critical">Critical (Immediate approval needed)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- File Upload -->
             <div class="my-8">
                 <label class="block text-gray-700 font-semibold mb-3">Supporting Documents (Optional)</label>
@@ -172,6 +229,8 @@
     const fieldsWaiver = document.getElementById('fields_1');
     const fieldsClearance = document.getElementById('fields_3');
     const fieldsLetters = document.getElementById('fields_letters');
+    const fieldsBudget = document.getElementById('fields_budget');
+    const fieldsProcurement = document.getElementById('fields_procurement');
 
     workflowSelect.addEventListener('change', function() {
         const val = this.value;
@@ -189,6 +248,12 @@
         } else if (text.includes('letter') || text.includes('transcript')) {
             dynamicContainer.appendChild(fieldsLetters);
             fieldsLetters.classList.remove('hidden');
+        } else if (text.includes('budget')) {
+            dynamicContainer.appendChild(fieldsBudget);
+            fieldsBudget.classList.remove('hidden');
+        } else if (text.includes('procurement')) {
+            dynamicContainer.appendChild(fieldsProcurement);
+            fieldsProcurement.classList.remove('hidden');
         }
     });
 </script>

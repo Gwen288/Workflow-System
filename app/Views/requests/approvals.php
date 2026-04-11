@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="mb-8 flex justify-between items-end">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 tracking-tight">My Approvals</h1>
-            <p class="text-gray-500 mt-1"><?= count($requests) ?> requests awaiting your action</p>
+            <h1 class="text-3xl font-bold text-gray-900 tracking-tight"><?= isset($isMyRequests) ? 'My Requests' : 'My Approvals' ?></h1>
+            <p class="text-gray-500 mt-1"><?= count($requests) ?> <?= isset($isMyRequests) ? 'requests currently being tracked' : 'requests awaiting your action' ?></p>
         </div>
         <div class="flex space-x-3 w-full md:w-auto mt-4 md:mt-0">
             <!-- Search -->
@@ -41,7 +41,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Pending Review -->
         <div class="bg-[#f0f7ff] border border-blue-100 rounded-xl p-5 shadow-sm">
-            <h3 class="text-sm font-medium text-blue-600 mb-2">Pending Review</h3>
+            <h3 class="text-sm font-medium text-blue-600 mb-2"><?= isset($isMyRequests) ? 'Total Submitted' : 'Pending Review' ?></h3>
             <p class="text-3xl font-bold text-blue-900"><?= $pendingCount ?></p>
         </div>
         <!-- In Progress -->
@@ -51,7 +51,7 @@
         </div>
         <!-- Overdue -->
         <div class="bg-[#fff0f0] border border-red-100 rounded-xl p-5 shadow-sm">
-            <h3 class="text-sm font-medium text-red-600 mb-2">Overdue</h3>
+            <h3 class="text-sm font-medium text-red-600 mb-2"><?= isset($isMyRequests) ? 'Delayed' : 'Overdue' ?></h3>
             <p class="text-3xl font-bold text-red-900"><?= $overdueCount ?></p>
         </div>
     </div>
@@ -76,7 +76,7 @@
                     <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                         <div class="flex flex-col items-center justify-center">
                             <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <span class="text-gray-500">No requests awaiting your approval</span>
+                            <span class="text-gray-500"><?= isset($isMyRequests) ? 'You have not submitted any tracking requests' : 'No requests awaiting your approval' ?></span>
                         </div>
                     </td>
                 </tr>

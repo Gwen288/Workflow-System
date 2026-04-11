@@ -44,6 +44,30 @@ class DashboardController extends Controller {
                 'myRequests' => $myRequests,
                 'insights' => $insights
             ]);
+        } elseif ($user['role'] === 'HOD') {
+            $db = \App\Core\Database::getInstance();
+            
+            $sqlAmount = "SELECT SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.budget_amount')) AS DECIMAL(10,2))) FROM Request WHERE workflow_type IN (SELECT workflow_id FROM Workflow WHERE name='Budget') AND user_id = ?";
+            $totalBudgetRequested = $db->query($sqlAmount, [$user['user_id']])->fetchColumn() ?: 0;
+            
+            $sqlCost = "SELECT SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.procurement_cost')) AS DECIMAL(10,2))) FROM Request WHERE workflow_type IN (SELECT workflow_id FROM Workflow WHERE name='Procurement') AND user_id = ?";
+            $totalProcurementCost = $db->query($sqlCost, [$user['user_id']])->fetchColumn() ?: 0;
+
+            $approvedBudgets = $db->query("SELECT COUNT(*) FROM Request WHERE workflow_type IN (SELECT workflow_id FROM Workflow WHERE name='Budget') AND status='Approved' AND user_id = ?", [$user['user_id']])->fetchColumn() ?: 0;
+            $approvedProcurements = $db->query("SELECT COUNT(*) FROM Request WHERE workflow_type IN (SELECT workflow_id FROM Workflow WHERE name='Procurement') AND status='Approved' AND user_id = ?", [$user['user_id']])->fetchColumn() ?: 0;
+
+            $metrics = [
+                'totalBudget' => $totalBudgetRequested,
+                'totalProcurement' => $totalProcurementCost,
+                'approvedBudgets' => $approvedBudgets,
+                'approvedProcurements' => $approvedProcurements
+            ];
+
+            $this->view('dashboard/hod', [
+                'myRequests' => $myRequests,
+                'metrics' => $metrics,
+                'insights' => $insights
+            ]);
         } else {
             $scope = $this->getRoleWorkflowScopeQuery($user['role']);
             $db = \App\Core\Database::getInstance();

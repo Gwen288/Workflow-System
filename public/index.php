@@ -47,6 +47,7 @@ $router->get('/requests/create', [RequestController::class, 'create']);
 $router->post('/requests/store', [RequestController::class, 'store']);
 $router->get('/requests/search', [RequestController::class, 'search']);
 $router->get('/requests/{id}', [RequestController::class, 'show']);
+$router->get('/requests/{id}/document', [RequestController::class, 'document']);
 $router->post('/requests/{id}/approve', [RequestController::class, 'approve']);
 $router->post('/requests/{id}/reject', [RequestController::class, 'reject']);
 $router->post('/requests/{id}/escalate', [RequestController::class, 'escalate']);

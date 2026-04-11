@@ -72,8 +72,19 @@ class RequestController extends Controller {
 
     public function create() {
         $workflowModel = new Workflow();
-        $workflows = $workflowModel->all();
-        $this->view('requests/create', ['workflows' => $workflows]);
+        $allWorkflows = $workflowModel->all();
+        $userRole = auth_user()['role'];
+
+        $workflows = array_filter($allWorkflows, function($w) use ($userRole) {
+            if ($userRole === 'Student') {
+                return !in_array($w['name'], ['Budget', 'Procurement']);
+            } elseif ($userRole === 'HOD') {
+                return in_array($w['name'], ['Budget', 'Procurement']);
+            }
+            return true;
+        });
+
+        $this->view('requests/create', ['workflows' => array_values($workflows)]);
     }
 
     public function store() {
@@ -137,6 +148,19 @@ class RequestController extends Controller {
         $this->view('requests/show', [
             'request' => $request,
             'logs' => $logs
+        ]);
+    }
+
+    public function document($id) {
+        $requestModel = new Request();
+        $request = $requestModel->find($id);
+
+        if (!$request) {
+            die("Request not found");
+        }
+
+        $this->view('requests/document', [
+            'request' => $request
         ]);
     }
 
