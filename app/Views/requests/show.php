@@ -47,10 +47,16 @@
                 <!-- Escalate Setup -->
                 <select id="escalate-role" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-orange-500 ml-4">
                     <option value="">-- Role --</option>
-                    <option value="HOD">HOD</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Finance Officer">Finance</option>
-                    <option value="Registry">Registry</option>
+                    <?php if (auth_user()['role'] === 'Registry'): ?>
+                        <option value="Finance Officer">Finance</option>
+                        <option value="Library">Library</option>
+                    <?php else: ?>
+                        <option value="HOD">HOD</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Finance Officer">Finance</option>
+                        <option value="Registry">Registry</option>
+                        <option value="Library">Library</option>
+                    <?php endif; ?>
                 </select>
                 <button onclick="handleAction('escalate')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition shadow">
                     Escalate

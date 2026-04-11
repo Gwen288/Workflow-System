@@ -28,6 +28,7 @@ class Router {
     public function dispatch($uri, $method) {
         // Automatically handle subdirectories (e.g., from XAMPP htdocs)
         $basePath = str_replace('/public/index.php', '', $_SERVER['SCRIPT_NAME']);
+        $uri = urldecode($uri);
         if ($basePath && strpos($uri, $basePath) === 0) {
             $uri = substr($uri, strlen($basePath));
         }

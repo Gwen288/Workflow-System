@@ -21,6 +21,23 @@ class RequestController extends Controller {
         $this->view('requests/index', ['requests' => $requests]);
     }
 
+    public function approvals() {
+        if (auth_user()['role'] === 'Student') {
+            $this->redirect('/my-requests');
+        }
+        $requestModel = new Request();
+        $requests = $requestModel->getPendingForUser(auth());
+        $this->view('requests/approvals', ['requests' => $requests]);
+    }
+
+    public function myRequests() {
+        $requestModel = new Request();
+        $requests = $requestModel->getSubmittedByUser(auth());
+        // For simplicity reusing the same table structural design from approvals
+        $this->view('requests/approvals', ['requests' => $requests, 'isMyRequests' => true]);
+    }
+
+
     public function create() {
         $workflowModel = new Workflow();
         $workflows = $workflowModel->all();
@@ -32,6 +49,24 @@ class RequestController extends Controller {
         $workflowId = $_POST['workflow_type'] ?? null;
         $priority = $_POST['priority_level'] ?? 'Medium';
         
+        // Handle metadata
+        $metadata = $_POST['metadata'] ?? [];
+        $metadataJson = !empty($metadata) ? json_encode($metadata) : null;
+        
+        // Handle file upload
+        $attachmentPath = null;
+        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../../public/uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9.\-_]/', '', basename($_FILES['attachment']['name']));
+            $targetPath = $uploadDir . $filename;
+            if (move_uploaded_file($_FILES['attachment']['tmp_name'], $targetPath)) {
+                $attachmentPath = '/uploads/' . $filename;
+            }
+        }
+
         $nextApprover = $aiService->suggestNextApprover($workflowId, $priority);
 
         $requestModel = new Request();
@@ -39,8 +74,10 @@ class RequestController extends Controller {
             'workflow_type' => $workflowId,
             'submitted_by' => auth(),
             'status' => 'Pending',
-            'current_approver' => $nextApprover['user_id'],
-            'priority_level' => $priority
+            'current_approver' => $nextApprover ? $nextApprover['user_id'] : null,
+            'priority_level' => $priority,
+            'metadata' => $metadataJson,
+            'attachment_path' => $attachmentPath
         ]);
 
         $auditLogModel = new AuditLog();

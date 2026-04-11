@@ -12,7 +12,8 @@ CREATE TABLE User (
     name VARCHAR(100) NOT NULL,
     role ENUM('Student', 'Staff', 'HOD', 'Library', 'CFO', 'Finance Officer', 'Registry', 'Logistics', 'Admin') NOT NULL,
     department VARCHAR(100),
-    email VARCHAR(150) UNIQUE NOT NULL
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password VARCHAR(255) NULL
 );
 
 -- =========================
@@ -104,14 +105,14 @@ CREATE INDEX idx_audit_request ON AuditLog(request_id);
 -- =========================
 -- SAMPLE DATA
 -- =========================
-INSERT INTO User (name, role, department, email) VALUES
-('Samuel Agyei', 'CFO', 'Finance', 'samuel@pau.edu'),
-('Ama Mensah', 'Finance Officer', 'Finance', 'ama@pau.edu'),
-('Kojo Asante', 'Registry', 'Registry', 'kojo@pau.edu'),
-('Yaw Boateng', 'Logistics', 'Logistics', 'yaw@pau.edu'),
-('Dr. Jane Doe', 'HOD', 'Computer Science', 'jane.doe@pau.edu'),
-('Mr. Librarian', 'Library', 'Main Library', 'library@pau.edu'),
-('Alice Student', 'Student', 'Computer Science', 'alice.student@pau.edu');
+INSERT INTO User (name, role, department, email, password) VALUES
+('Samuel Agyei', 'CFO', 'Finance', 'samuel@pau.edu', '$2y$12$3T0gitsM9kmk2oknWZJN/O6ykGDOTgF6v5TAnsS0dq0wiw.XQpbGy'),
+('Ama Mensah', 'Finance Officer', 'Finance', 'ama@pau.edu', '$2y$12$3T0gitsM9kmk2oknWZJN/O6ykGDOTgF6v5TAnsS0dq0wiw.XQpbGy'),
+('Kojo Asante', 'Registry', 'Registry', 'kojo@pau.edu', '$2y$12$3T0gitsM9kmk2oknWZJN/O6ykGDOTgF6v5TAnsS0dq0wiw.XQpbGy'),
+('Yaw Boateng', 'Logistics', 'Logistics', 'yaw@pau.edu', '$2y$12$3T0gitsM9kmk2oknWZJN/O6ykGDOTgF6v5TAnsS0dq0wiw.XQpbGy'),
+('Dr. Jane Doe', 'HOD', 'Computer Science', 'jane.doe@pau.edu', '$2y$12$3T0gitsM9kmk2oknWZJN/O6ykGDOTgF6v5TAnsS0dq0wiw.XQpbGy'),
+('Mr. Librarian', 'Library', 'Main Library', 'library@pau.edu', '$2y$12$3T0gitsM9kmk2oknWZJN/O6ykGDOTgF6v5TAnsS0dq0wiw.XQpbGy'),
+('Alice Student', 'Student', 'Computer Science', 'alice.student@pau.edu', '$2y$12$3T0gitsM9kmk2oknWZJN/O6ykGDOTgF6v5TAnsS0dq0wiw.XQpbGy');
 
 INSERT INTO Workflow (name, status) VALUES
 ('Fee Waiver', 'Active'),

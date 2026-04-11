@@ -22,6 +22,8 @@ use App\Core\Router;
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Controllers\RequestController;
+use App\Controllers\AuditController;
+use App\Controllers\SettingsController;
 
 $router = new Router();
 
@@ -29,6 +31,8 @@ $router = new Router();
 // Auth
 $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login']);
+$router->get('/register', [AuthController::class, 'showRegister']);
+$router->post('/register', [AuthController::class, 'register']);
 $router->get('/logout', [AuthController::class, 'logout']);
 
 // Dashboard
@@ -37,6 +41,8 @@ $router->get('/dashboard', [DashboardController::class, 'index']);
 
 // Requests
 $router->get('/requests', [RequestController::class, 'index']);
+$router->get('/approvals', [RequestController::class, 'approvals']);
+$router->get('/my-requests', [RequestController::class, 'myRequests']);
 $router->get('/requests/create', [RequestController::class, 'create']);
 $router->post('/requests/store', [RequestController::class, 'store']);
 $router->get('/requests/{id}', [RequestController::class, 'show']);
@@ -44,7 +50,10 @@ $router->post('/requests/{id}/approve', [RequestController::class, 'approve']);
 $router->post('/requests/{id}/reject', [RequestController::class, 'reject']);
 $router->post('/requests/{id}/escalate', [RequestController::class, 'escalate']);
 
-// Analytics / AI
+// Analytics / AI / Audit / Settings
 $router->get('/analytics', [DashboardController::class, 'analytics']);
+$router->get('/audit', [AuditController::class, 'index']);
+$router->get('/settings', [SettingsController::class, 'index']);
+$router->post('/settings/profile', [SettingsController::class, 'updateProfile']);
 
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
