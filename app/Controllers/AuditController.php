@@ -19,23 +19,15 @@ class AuditController extends Controller {
         $search = $_GET['q'] ?? '';
         
         $requestModel = new Request();
-        // Custom query to fetch requests with their last audit action
-        // For simplicity, we just fetch all and filter in PHP, or do a comprehensive SQL.
-        // A comprehensive SQL:
+        // Optimized query using correlated subquery for latest action
         $sql = "SELECT r.request_id, w.name as workflow_name, u1.name as submitter_name, 
                        r.submission_date, r.status, dp.action as last_action_type, dp.comment as last_action_comment
                 FROM Request r
                 JOIN Workflow w ON r.workflow_type = w.workflow_id
                 JOIN User u1 ON r.submitted_by = u1.user_id
-                LEFT JOIN (
-                    SELECT a.request_id, a.action, a.comment
-                    FROM AuditLog a
-                    INNER JOIN (
-                        SELECT request_id, MAX(timestamp) as max_ts
-                        FROM AuditLog
-                        GROUP BY request_id
-                    ) b ON a.request_id = b.request_id AND a.timestamp = b.max_ts
-                ) dp ON r.request_id = dp.request_id
+                LEFT JOIN AuditLog dp ON dp.log_id = (
+                    SELECT MAX(log_id) FROM AuditLog WHERE request_id = r.request_id
+                )
                 WHERE 1=1 ";
         
         $params = [];
@@ -44,6 +36,10 @@ class AuditController extends Controller {
             $sql .= " AND r.submitted_by = ? ";
             $params[] = auth();
         }
+
+        if (in_array(auth_user()['role'], ['Finance Officer', 'CFO'])) {
+            $sql .= " AND w.name != 'Introductory Letter' ";
+        }
         
         if (!empty($search)) {
             $sql .= " AND (w.name LIKE ? OR u1.name LIKE ? OR r.request_id LIKE ? OR r.status LIKE ?)";
@@ -51,7 +47,7 @@ class AuditController extends Controller {
             $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
         }
         
-        $sql .= " ORDER BY r.submission_date DESC";
+        $sql .= " ORDER BY r.submission_date DESC LIMIT 50";
         
         $requests = $requestModel->rawQuery($sql, $params);
         
@@ -59,5 +55,58 @@ class AuditController extends Controller {
             'requests' => $requests,
             'search' => $search
         ]);
+    }
+
+    public function search() {
+        header('Content-Type: application/json');
+        $query = $_GET['q'] ?? '';
+        $workflowType = $_GET['type'] ?? '';
+        $status = $_GET['status'] ?? '';
+
+        $requestModel = new Request();
+        $sql = "SELECT r.request_id, w.name as workflow_name, u1.name as submitter_name, 
+                       r.submission_date, r.status, dp.action as last_action_type, dp.comment as last_action_comment
+                FROM Request r
+                JOIN Workflow w ON r.workflow_type = w.workflow_id
+                JOIN User u1 ON r.submitted_by = u1.user_id
+                LEFT JOIN AuditLog dp ON dp.log_id = (
+                    SELECT MAX(log_id) FROM AuditLog WHERE request_id = r.request_id
+                )
+                WHERE 1=1 ";
+        
+        $params = [];
+
+        if (auth_user()['role'] === 'HOD') {
+            $sql .= " AND r.submitted_by = ? ";
+            $params[] = auth();
+        }
+
+        if (in_array(auth_user()['role'], ['Finance Officer', 'CFO'])) {
+            $sql .= " AND w.name != 'Introductory Letter' ";
+        }
+        
+        if (!empty($query)) {
+            $sql .= " AND (w.name LIKE ? OR u1.name LIKE ? OR r.request_id LIKE ? OR r.status LIKE ?)";
+            $searchTerm = '%' . $query . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        if (!empty($workflowType)) {
+            $sql .= " AND w.name = ? ";
+            $params[] = $workflowType;
+        }
+
+        if (!empty($status)) {
+            $sql .= " AND r.status = ? ";
+            $params[] = $status;
+        }
+        
+        $sql .= " ORDER BY r.submission_date DESC LIMIT 50";
+        
+        $requests = $requestModel->rawQuery($sql, $params);
+        echo json_encode($requests);
     }
 }

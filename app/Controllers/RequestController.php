@@ -40,7 +40,8 @@ class RequestController extends Controller {
         // Apply filtering natively in PHP
         if (!empty($filterType)) {
             $requests = array_filter($requests, function($req) use ($filterType) {
-                return $req['workflow_name'] === $filterType;
+                // Universal filter: check both status and workflow name
+                return ($req['status'] ?? '') === $filterType || ($req['workflow_name'] ?? '') === $filterType;
             });
         }
 
@@ -152,11 +153,15 @@ class RequestController extends Controller {
     public function show($id) {
         $requestModel = new Request();
         $request = $requestModel->find($id);
-
         if (!$request) {
             http_response_code(404);
             echo "Request not found";
             return;
+        }
+
+        // Logic to clear "Needs Attention" on read
+        if ($request['status'] === 'Rejected' && $request['submitted_by'] == auth() && ($request['is_acknowledged'] ?? 0) == 0) {
+            $requestModel->update($id, ['is_acknowledged' => 1]);
         }
 
         $auditLogModel = new AuditLog();

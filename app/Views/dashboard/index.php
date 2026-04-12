@@ -112,20 +112,25 @@
     </div>
 </div>
 
-<!-- AI Highlights (From original insights) -->
-<?php if (!empty($insights['anomalyFlags'])): ?>
-<div class="bg-indigo-50/50 rounded-2xl shadow-sm border border-indigo-100 p-6">
-    <h2 class="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-4 flex items-center">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        AI Insights
-    </h2>
-    <ul class="space-y-2">
-        <?php foreach(array_slice($insights['anomalyFlags'], 0, 3) as $flag): ?>
-            <li class="text-sm text-indigo-700 flex items-start">
-                <span class="mr-2">&bull;</span>
-                <?= htmlspecialchars($flag) ?>
-            </li>
+<!-- AI Intelligence Narratives (Real Insights) -->
+<?php if (!empty($insights['narrative'])): ?>
+<div class="mb-8 border-t border-gray-100 pt-8">
+    <div class="flex items-center space-x-2 mb-4">
+        <div class="p-1.5 bg-indigo-100 rounded-lg">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </div>
+        <h2 class="text-sm font-bold text-gray-900 uppercase tracking-widest">Workflow Intelligence</h2>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+        <?php foreach($insights['narrative'] as $line): ?>
+            <div class="flex items-start group">
+                <div class="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-indigo-400 group-hover:scale-150 transition-transform"></div>
+                <p class="text-[15px] leading-relaxed text-gray-700 font-medium">
+                    <?= htmlspecialchars($line) ?>
+                </p>
+            </div>
         <?php endforeach; ?>
-    </ul>
+    </div>
 </div>
 <?php endif; ?>

@@ -37,7 +37,7 @@ class DashboardController extends Controller {
         }
         
         $aiService = new AIService();
-        $insights = $aiService->generateDashboardInsights();
+        $insights = $aiService->generateDashboardInsights($user['role']);
 
         if ($user['role'] === 'Student') {
             $this->view('dashboard/student', [
@@ -113,83 +113,104 @@ class DashboardController extends Controller {
         $db = \App\Core\Database::getInstance();
         $scope = $this->getRoleWorkflowScopeQuery(auth_user()['role'], 'r');
         
-        // Dynamic KPIs
+        // 1. GLOBAL KPIs
         $totalReqs = $db->query("SELECT COUNT(*) FROM Request r WHERE $scope")->fetchColumn() ?: 1;
-        $approved = $db->query("SELECT COUNT(*) FROM Request r WHERE status='Approved' AND $scope")->fetchColumn();
-        $rejected = $db->query("SELECT COUNT(*) FROM Request r WHERE status='Rejected' AND $scope")->fetchColumn();
-        $pending = $db->query("SELECT COUNT(*) FROM Request r WHERE status IN ('Pending','Escalated') AND $scope")->fetchColumn();
-        $overdue7 = $db->query("SELECT COUNT(*) FROM Request r WHERE status IN ('Pending','Escalated') AND DATEDIFF(NOW(), submission_date) > 7 AND $scope")->fetchColumn();
+        $approvedCount = $db->query("SELECT COUNT(*) FROM Request r WHERE status='Approved' AND $scope")->fetchColumn();
+        $pendingCount = $db->query("SELECT COUNT(*) FROM Request r WHERE status IN ('Pending','Escalated') AND $scope")->fetchColumn();
         
-        $approvalRate = round(($approved / $totalReqs) * 100);
-        $successRate = round(($approved / max(1, $approved + $rejected)) * 100);
-        $avgCycleTime = number_format(max(2.1, 3.7 - ($approved * 0.05)), 1); 
+        // 2. CATEGORICAL METRICS (Real Data)
+        
+        // FEES
+        $feeStats = $db->query("SELECT 
+            SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.fee_requested_adjustment')) AS DECIMAL(10,2))) as total_waived,
+            COUNT(*) as volume
+            FROM Request WHERE workflow_type = (SELECT workflow_id FROM Workflow WHERE name='Fee Waiver') AND status='Approved'")->fetch();
+            
+        // CLEARANCE
+        $clearanceStats = $db->query("SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status='Approved' THEN 1 ELSE 0 END) as approved
+            FROM Request WHERE workflow_type = (SELECT workflow_id FROM Workflow WHERE name='Clearance')")->fetch();
+            
+        // PROCUREMENT
+        $procurementStats = $db->query("SELECT 
+            SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.procurement_cost')) AS DECIMAL(10,2))) as total_spend,
+            COUNT(*) as volume
+            FROM Request WHERE workflow_type = (SELECT workflow_id FROM Workflow WHERE name='Procurement') AND status='Approved'")->fetch();
+            
+        // BUDGET
+        $budgetStats = $db->query("SELECT 
+            SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.budget_amount')) AS DECIMAL(10,2))) as total_allocated,
+            COUNT(*) as count
+            FROM Request WHERE workflow_type = (SELECT workflow_id FROM Workflow WHERE name='Budget') AND status='Approved'")->fetch();
 
-        // Workflow Status Counts
-        $workflowScope = $this->getRoleWorkflowScopeQuery(auth_user()['role'], 'r');
-        $workflowStats = $db->query("
-            SELECT w.name, 
-                   SUM(CASE WHEN r.status IN ('Pending','Escalated') THEN 1 ELSE 0 END) as pending_count,
-                   SUM(CASE WHEN r.status = 'Approved' THEN 1 ELSE 0 END) as approved_count
-            FROM Request r
-            JOIN Workflow w ON r.workflow_type = w.workflow_id
-            WHERE $workflowScope
-            GROUP BY w.workflow_id
-        ")->fetchAll();
+        // 2b. SECONDARY BREAKDOWNS (For new charts)
+        
+        // Fees by Reason
+        $feeReasons = $db->query("SELECT 
+            JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.fee_reason')) as reason, 
+            COUNT(*) as count 
+            FROM Request WHERE workflow_type = (SELECT workflow_id FROM Workflow WHERE name='Fee Waiver') 
+            GROUP BY reason")->fetchAll();
+            
+        // Budget by Department
+        $budgetByDept = $db->query("SELECT 
+            JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.budget_department')) as dept, 
+            SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.budget_amount')) AS DECIMAL(10,2))) as total
+            FROM Request WHERE workflow_type = (SELECT workflow_id FROM Workflow WHERE name='Budget') AND status='Approved'
+            GROUP BY dept")->fetchAll();
+            
+        // Procurement by Urgency
+        $procurementUrgency = $db->query("SELECT 
+            JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.procurement_urgency')) as urgency, 
+            COUNT(*) as count 
+            FROM Request WHERE workflow_type = (SELECT workflow_id FROM Workflow WHERE name='Procurement')
+            GROUP BY urgency")->fetchAll();
 
-        // Monthly Request Volume
-        // Generate last 6 months buckets
+        // 3. TREND DATA (6 Month Volume)
         $months = [];
+        $volumeByWorkflow = [];
         for ($i = 5; $i >= 0; $i--) {
-            $months[] = date('M', strtotime("-$i months"));
-        }
-        
-        $monthlyVolumeData = [
-            'Fee Waiver' => array_fill(0, 6, rand(5, 12)), 
-            'Procurement' => array_fill(0, 6, rand(2, 8)), 
-            'Clearance' => array_fill(0, 6, rand(8, 20)),
-            'Introductory Letter' => array_fill(0, 6, rand(3, 10)),
-            'Transcript' => array_fill(0, 6, rand(4, 15))
-        ];
-        
-        // Filter monthly data keys based on role so we don't show irrelevant charts
-        $activeRole = auth_user()['role'];
-        if ($activeRole === 'Finance Officer' || $activeRole === 'CFO') {
-           $monthlyVolumeData = array_intersect_key($monthlyVolumeData, array_flip(['Fee Waiver', 'Clearance', 'Procurement']));
-        } elseif ($activeRole === 'Registry') {
-           $monthlyVolumeData = array_intersect_key($monthlyVolumeData, array_flip(['Clearance', 'Introductory Letter', 'Transcript', 'English Proficiency Letter']));
-        } elseif ($activeRole === 'Library') {
-           $monthlyVolumeData = array_intersect_key($monthlyVolumeData, array_flip(['Clearance']));
-        }
-
-        // Inject actual DB volumes dynamically for the current month (index 5)
-        $currentMonthStats = $db->query("
-            SELECT w.name, COUNT(*) as c 
-            FROM Request r JOIN Workflow w ON r.workflow_type = w.workflow_id
-            WHERE MONTH(r.submission_date) = MONTH(NOW()) AND YEAR(r.submission_date) = YEAR(NOW())
-            AND $workflowScope
-            GROUP BY w.workflow_id
-        ")->fetchAll();
-        foreach($currentMonthStats as $stat) {
-            if(isset($monthlyVolumeData[$stat['name']])) {
-                $monthlyVolumeData[$stat['name']][5] += $stat['c'];
-            } else {
-                $monthlyVolumeData[$stat['name']] = array_fill(0, 5, 0);
-                $monthlyVolumeData[$stat['name']][5] = $stat['c'];
+            $m = date('M', strtotime("-$i months"));
+            $months[] = $m;
+            $monthNum = date('m', strtotime("-$i months"));
+            $yearNum = date('Y', strtotime("-$i months"));
+            
+            $monthlyStats = $db->query("SELECT w.name, COUNT(*) as c 
+                FROM Request r JOIN Workflow w ON r.workflow_type = w.workflow_id
+                WHERE MONTH(r.submission_date) = $monthNum AND YEAR(r.submission_date) = $yearNum
+                AND $scope GROUP BY w.workflow_id")->fetchAll();
+                
+            foreach($monthlyStats as $ms) {
+                if(!isset($volumeByWorkflow[$ms['name']])) $volumeByWorkflow[$ms['name']] = array_fill(0, 6, 0);
+                $volumeByWorkflow[$ms['name']][5-$i] = (int)$ms['c'];
             }
+        }
+        
+        // Filter for Finance Officer (Streamline)
+        if (auth_user()['role'] === 'Finance Officer') {
+            $volumeByWorkflow = array_intersect_key($volumeByWorkflow, array_flip(['Fee Waiver', 'Procurement']));
         }
 
         $analyticsData = [
             'kpis' => [
-                'avgCycleTime' => $avgCycleTime,
-                'approvalRate' => $approvalRate,
-                'overdue7Days' => $overdue7,
-                'totalPending' => $pending,
-                'completed' => $approved + $rejected,
-                'successRate' => $successRate,
+                'approvalRate' => round(($approvedCount / $totalReqs) * 100),
+                'totalPending' => $pendingCount,
+                'totalVolume' => $totalReqs,
             ],
-            'workflowStats' => $workflowStats,
+            'categories' => [
+                'fees' => $feeStats,
+                'clearance' => $clearanceStats,
+                'procurement' => $procurementStats,
+                'budget' => $budgetStats,
+                'breakdowns' => [
+                    'feeReasons' => $feeReasons,
+                    'budgetByDept' => $budgetByDept,
+                    'procurementUrgency' => $procurementUrgency
+                ]
+            ],
             'monthlyLabels' => $months,
-            'monthlyVolume' => $monthlyVolumeData
+            'monthlyVolume' => $volumeByWorkflow
         ];
 
         $this->view('dashboard/analytics', [

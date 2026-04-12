@@ -16,14 +16,11 @@
             <!-- Filters -->
             <div class="relative">
                 <select id="ajax-filter" class="appearance-none bg-white border border-gray-200 text-gray-700 font-medium py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition cursor-pointer">
-                    <option value="">All Types</option>
-                    <?php 
-                        $types = [];
-                        foreach($requests as $r) { $types[$r['workflow_name']] = 1; }
-                        foreach(array_keys($types) as $type): 
-                    ?>
-                        <option value="<?= htmlspecialchars($type) ?>"><?= htmlspecialchars($type) ?></option>
-                    <?php endforeach; ?>
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Escalated">Escalated</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>

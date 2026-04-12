@@ -5,7 +5,7 @@ $inProgress = 0;
 $completed = 0;
 
 foreach($myRequests as $req) {
-    if ($req['status'] === 'Rejected') {
+    if ($req['status'] === 'Rejected' && ($req['is_acknowledged'] ?? 0) == 0) {
         $needsAttention++;
     } elseif ($req['status'] === 'Approved') {
         $completed++;
