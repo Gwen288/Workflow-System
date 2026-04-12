@@ -47,6 +47,15 @@
 
 
         <?php if ($request['current_approver'] == auth() && in_array($request['status'], ['Pending', 'Escalated'])): ?>
+        <?php
+            $feeAmount = 0;
+            if (!empty($request['metadata'])) {
+                $meta = json_decode($request['metadata'], true);
+                if (isset($meta['fee_amount'])) {
+                    $feeAmount = floatval($meta['fee_amount']);
+                }
+            }
+        ?>
         <div class="mt-8 border-t pt-4" id="action-panel">
             <h3 class="text-lg font-bold text-blue-800 mb-4">Approval Decision</h3>
             <div class="flex space-x-2">
@@ -59,6 +68,7 @@
                 </button>
                 
                 <!-- Escalate Setup -->
+                <?php if (auth_user()['role'] !== 'CFO'): ?>
                 <select id="escalate-role" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-orange-500 ml-4">
                     <option value="">-- Role --</option>
                     <?php if (auth_user()['role'] === 'Registry'): ?>
@@ -78,6 +88,7 @@
                 <button onclick="handleAction('escalate')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition shadow">
                     Escalate
                 </button>
+                <?php endif; ?>
             </div>
             <p id="action-msg" class="text-sm mt-3 font-semibold"></p>
         </div>
@@ -87,6 +98,15 @@
             const comment = document.getElementById('action-comment').value;
             let url = '<?= url('/requests/' . $request['request_id']) ?>/' + type;
             let bodyData = { comment: comment };
+            
+            const reqAmount = <?= $feeAmount ?>;
+            const userRole = '<?= auth_user()['role'] ?>';
+            
+            if (userRole === 'Finance Officer' && reqAmount >= 10000 && (type === 'approve' || type === 'reject')) {
+                if (!confirm('Caution: Fee Adjustment amounts of GHS 10,000 or above are typically approved or rejected by the CFO. Are you sure you want to proceed yourself instead of escalating?')) {
+                    return;
+                }
+            }
             
             if (type === 'escalate') {
                 const role = document.getElementById('escalate-role').value;

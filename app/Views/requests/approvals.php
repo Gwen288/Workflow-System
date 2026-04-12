@@ -35,24 +35,34 @@
     <!-- Stats Cards -->
     <?php
         $now = new DateTime();
-        $pendingCount = count($requests);
+        $pendingCount = isset($isMyRequests) ? 0 : count($requests);
         $overdueCount = 0;
         $inProgressCount = 0;
         
         foreach ($requests as $req) {
-            $submitted = new DateTime($req['submission_date']);
-            $diff = $now->diff($submitted)->days;
-            if ($diff >= 5) {
-                $overdueCount++;
+            if (isset($isMyRequests)) {
+                if ($req['status'] === 'Rejected') {
+                    $overdueCount++;
+                } elseif ($req['status'] === 'Approved') {
+                    $pendingCount++;
+                } else {
+                    $inProgressCount++;
+                }
             } else {
-                $inProgressCount++;
+                $submitted = new DateTime($req['submission_date']);
+                $diff = $now->diff($submitted)->days;
+                if ($diff >= 5) {
+                    $overdueCount++;
+                } else {
+                    $inProgressCount++;
+                }
             }
         }
     ?>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Pending Review -->
+        <!-- Pending Review / Completed -->
         <div class="bg-[#f0f7ff] border border-blue-100 rounded-xl p-5 shadow-sm">
-            <h3 class="text-sm font-medium text-blue-600 mb-2"><?= isset($isMyRequests) ? 'Total Submitted' : 'Pending Review' ?></h3>
+            <h3 class="text-sm font-medium text-blue-600 mb-2"><?= isset($isMyRequests) ? 'Completed' : 'Pending Review' ?></h3>
             <p class="text-3xl font-bold text-blue-900"><?= $pendingCount ?></p>
         </div>
         <!-- In Progress -->
@@ -62,7 +72,7 @@
         </div>
         <!-- Overdue -->
         <div class="bg-[#fff0f0] border border-red-100 rounded-xl p-5 shadow-sm">
-            <h3 class="text-sm font-medium text-red-600 mb-2"><?= isset($isMyRequests) ? 'Delayed' : 'Overdue' ?></h3>
+            <h3 class="text-sm font-medium text-red-600 mb-2"><?= isset($isMyRequests) ? 'Needs Attention' : 'Overdue' ?></h3>
             <p class="text-3xl font-bold text-red-900"><?= $overdueCount ?></p>
         </div>
     </div>
@@ -100,8 +110,24 @@
                         $reqCode = $typePrefix . '-' . date('Y') . '-' . str_pad($req['request_id'], 3, '0', STR_PAD_LEFT);
                         
                         $isOverdue = $daysOpen >= 5;
-                        $statusClass = $isOverdue ? 'bg-red-50 text-red-600 border-red-100' : 'bg-orange-50 text-orange-600 border-orange-100';
-                        $statusText = $isOverdue ? 'Overdue' : 'In Progress';
+                        if (isset($isMyRequests)) {
+                            if ($req['status'] === 'Approved') {
+                                $statusClass = 'bg-green-50 text-green-600 border-green-100';
+                                $statusText = 'Approved';
+                            } elseif ($req['status'] === 'Rejected') {
+                                $statusClass = 'bg-red-50 text-red-600 border-red-100';
+                                $statusText = 'Rejected';
+                            } elseif ($req['status'] === 'Escalated') {
+                                $statusClass = 'bg-purple-50 text-purple-600 border-purple-100';
+                                $statusText = 'Escalated';
+                            } else {
+                                $statusClass = 'bg-amber-50 text-amber-600 border-amber-100';
+                                $statusText = 'Pending';
+                            }
+                        } else {
+                            $statusClass = $isOverdue ? 'bg-red-50 text-red-600 border-red-100' : 'bg-orange-50 text-orange-600 border-orange-100';
+                            $statusText = $isOverdue ? 'Overdue' : 'In Progress';
+                        }
                         
                         $daysColorClass = 'text-green-600';
                         if ($daysOpen >= 5) {
