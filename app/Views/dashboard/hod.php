@@ -79,39 +79,57 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-white border-b border-gray-100">
-                        <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Req ID</th>
-                        <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Submitted</th>
-                        <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50 flex-1">
-                    <?php if (empty($myRequests)): ?>
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
-                            <div class="flex flex-col items-center">
-                                <svg class="w-12 h-12 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                <span>No requests submitted yet.</span>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php else: ?>
-                        <?php foreach (array_slice($myRequests, 0, 5) as $req): ?>
-                        <tr class="hover:bg-blue-50/30 transition group">
-                            <td class="py-4 px-6">
-                                <a href="<?= url('/requests/' . $req['request_id']) ?>" class="font-bold text-blue-600 hover:text-blue-800">
-                                    REQ-<?= str_pad($req['request_id'], 4, '0', STR_PAD_LEFT) ?>
-                                </a>
+                        <tr class="bg-white border-b border-gray-100">
+                            <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Req ID</th>
+                            <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Details</th>
+                            <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Submitted</th>
+                            <th class="py-4 px-6 font-semibold text-xs text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50 flex-1">
+                        <?php if (empty($myRequests)): ?>
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-12 h-12 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span>No requests submitted yet.</span>
+                                </div>
                             </td>
-                            <td class="py-4 px-6">
-                                <span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full border border-gray-200">
-                                    <?= htmlspecialchars($req['workflow_name']) ?>
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-sm text-gray-600">
-                                <?= date('M j, Y g:i A', strtotime($req['submission_date'])) ?>
-                            </td>
+                        </tr>
+                        <?php else: ?>
+                            <?php foreach (array_slice($myRequests, 0, 5) as $req): 
+                                $meta = json_decode($req['metadata'], true);
+                            ?>
+                            <tr class="hover:bg-blue-50/30 transition group">
+                                <td class="py-4 px-6">
+                                    <a href="<?= url('/requests/' . $req['request_id']) ?>" class="font-bold text-blue-600 hover:text-blue-800">
+                                        REQ-<?= str_pad($req['request_id'], 4, '0', STR_PAD_LEFT) ?>
+                                    </a>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full border border-gray-200">
+                                        <?= htmlspecialchars($req['workflow_name']) ?>
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <?php if ($req['workflow_name'] === 'Budget'): ?>
+                                        <div class="flex flex-col space-y-1">
+                                            <span class="text-xs font-bold text-gray-800">GHS <?= number_format(($meta['budget_amount'] ?? 0), 2) ?></span>
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100"><?= htmlspecialchars($meta['budget_item_1'] ?? 'N/A') ?></span>
+                                                <span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100"><?= htmlspecialchars($meta['budget_item_2'] ?? 'N/A') ?></span>
+                                            </div>
+                                        </div>
+                                    <?php elseif ($req['workflow_name'] === 'Procurement'): ?>
+                                        <span class="text-xs font-bold text-gray-800">GHS <?= number_format(($meta['procurement_cost'] ?? 0), 2) ?></span>
+                                    <?php else: ?>
+                                        <span class="text-xs text-gray-400 italic">No primary metrics</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-gray-600">
+                                    <?= date('M j, Y g:i A', strtotime($req['submission_date'])) ?>
+                                </td>
                             <td class="py-4 px-6">
                                 <?php if($req['status'] === 'Approved'): ?>
                                     <span class="inline-flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Approved</span></span>

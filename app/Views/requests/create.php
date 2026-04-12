@@ -32,7 +32,7 @@
                 </div>
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">Student Name</label>
-                    <input type="text" name="metadata[student_name]" value="<?= htmlspecialchars(auth_user()['name']) ?>" readonly class="appearance-none block w-full bg-gray-50 text-gray-800 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white shadow-sm cursor-not-allowed">
+                    <input type="text" name="metadata[student_name]" value="<?= htmlspecialchars(auth_user()['name']) ?>" readonly class="appearance-none block w-full bg-gray-50 text-gray-800 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white shadow-sm cursor-not-allowed" required>
                 </div>
                 <?php else: ?>
                 <div>
@@ -41,7 +41,7 @@
                 </div>
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">Staff Name</label>
-                    <input type="text" name="metadata[staff_name]" value="<?= htmlspecialchars(auth_user()['name']) ?>" readonly class="appearance-none block w-full bg-gray-50 text-gray-800 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white shadow-sm cursor-not-allowed">
+                    <input type="text" name="metadata[staff_name]" value="<?= htmlspecialchars(auth_user()['name']) ?>" readonly class="appearance-none block w-full bg-gray-50 text-gray-800 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white shadow-sm cursor-not-allowed" required>
                 </div>
                 <?php endif; ?>
             </div>
@@ -105,7 +105,7 @@
                             <option value="pickup">Physical Pickup</option>
                             <option value="mail">Postal Mail</option>
                         </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
                     </div>
                 </div>
                 <div>
@@ -132,6 +132,16 @@
                     <label class="block text-gray-700 font-semibold mb-2">Amount Requested (GHS)</label>
                     <input type="number" step="0.01" name="metadata[budget_amount]" placeholder="0.00" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Target Procurement Item 1</label>
+                        <input type="text" name="metadata[budget_item_1]" placeholder="First expected purchase" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Target Procurement Item 2</label>
+                        <input type="text" name="metadata[budget_item_2]" placeholder="Second expected purchase" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm">
+                    </div>
+                </div>
                 <div class="md:col-span-2">
                     <label class="block text-gray-700 font-semibold mb-2">Budget Justification <span class="text-blue-500 font-normal italic">(Include two items that will be on your procurement form)</span></label>
                     <textarea name="metadata[budget_justification]" rows="3" placeholder="Explain the need for this budget and list at least two specific items intended for procurement..." class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:border-blue-400 focus:ring-blue-100"></textarea>
@@ -142,11 +152,11 @@
             <div id="fields_procurement" class="dynamic-fields hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 w-full">
                 <div class="md:col-span-2">
                     <label class="block text-gray-700 font-semibold mb-2">Item Descriptions</label>
-                    <textarea name="metadata[procurement_items]" rows="3" placeholder="List items, quantities, and specific requirements..." class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:border-blue-400 focus:ring-blue-100"></textarea>
+                    <textarea name="metadata[procurement_items]" id="procurement_items" rows="3" placeholder="List items, quantities, and specific requirements..." class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:border-blue-400 focus:ring-blue-100"></textarea>
                 </div>
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">Estimated Total Cost (GHS)</label>
-                    <input type="number" step="0.01" name="metadata[procurement_cost]" placeholder="0.00" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
+                    <input type="number" step="0.01" name="metadata[procurement_cost]" id="procurement_cost" placeholder="0.00" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
                 </div>
                 <div>
                     <label class="block text-gray-700 font-semibold mb-2">Vendor Preferences (if any)</label>
@@ -159,7 +169,9 @@
                             <option value="">-- No linked budget --</option>
                             <?php foreach ($approvedBudgets as $budget): 
                                 $bMeta = json_decode($budget['metadata'], true);
-                                $displayLabel = "Budget #" . $budget['request_id'] . " - GHS " . number_format(($bMeta['budget_amount'] ?? 0), 2) . " (" . ($bMeta['budget_fiscal_year'] ?? 'N/A') . ")";
+                                $items = array_filter([$bMeta['budget_item_1'] ?? '', $bMeta['budget_item_2'] ?? '']);
+                                $itemsStr = !empty($items) ? " [" . implode(', ', $items) . "]" : "";
+                                $displayLabel = "Budget #" . $budget['request_id'] . " - GHS " . number_format(($bMeta['budget_amount'] ?? 0), 2) . " (" . ($bMeta['budget_fiscal_year'] ?? 'N/A') . ")" . $itemsStr;
                             ?>
                                 <option value="<?= $budget['request_id'] ?>"><?= htmlspecialchars($displayLabel) ?></option>
                             <?php endforeach; ?>
@@ -191,6 +203,16 @@
                         <div class="bg-white p-3 rounded-lg border border-blue-50 shadow-sm">
                             <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Department</span>
                             <span id="snap-dept" class="text-sm font-bold text-gray-800"></span>
+                        </div>
+                        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-3 rounded-lg border border-blue-50 shadow-sm">
+                                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Target Item 1</span>
+                                <span id="snap-item-1" class="text-sm font-bold text-blue-900 italic"></span>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-blue-50 shadow-sm">
+                                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Target Item 2</span>
+                                <span id="snap-item-2" class="text-sm font-bold text-blue-900 italic"></span>
+                            </div>
                         </div>
                         <div class="md:col-span-2 bg-white/50 p-3 rounded-lg border border-blue-50">
                             <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Justification & Procurement Items</span>
@@ -251,6 +273,8 @@
     </form>
 </div>
 
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.getElementById('file-input').addEventListener('change', function(e) {
         if(e.target.files.length > 0) {
@@ -305,6 +329,8 @@
     const snapYear = document.getElementById('snap-year');
     const snapAmount = document.getElementById('snap-amount');
     const snapDept = document.getElementById('snap-dept');
+    const snapItem1 = document.getElementById('snap-item-1');
+    const snapItem2 = document.getElementById('snap-item-2');
     const snapJustification = document.getElementById('snap-justification');
 
     budgetSelect.addEventListener('change', function() {
@@ -320,9 +346,73 @@
             snapId.textContent = '#' + budget.request_id;
             snapYear.textContent = meta.budget_fiscal_year || 'N/A';
             snapDept.textContent = budget.department || 'N/A';
+            snapItem1.textContent = meta.budget_item_1 || 'N/A';
+            snapItem2.textContent = meta.budget_item_2 || 'N/A';
             snapAmount.textContent = 'GHS ' + (parseFloat(meta.budget_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2}));
             snapJustification.textContent = meta.budget_justification || 'No justification provided.';
             budgetSnapshot.classList.remove('hidden');
+        }
+    });
+
+    // Integrated Submission Guard
+    const requestForm = document.querySelector('form');
+    requestForm.addEventListener('submit', function(e) {
+        const typeSelect = document.getElementById('workflow_type');
+        if (!typeSelect.value) {
+            e.preventDefault();
+            Swal.fire('Error', 'Please select a workflow type.', 'error');
+            return;
+        }
+
+        const workflowName = typeSelect.options[typeSelect.selectedIndex].text.toLowerCase();
+
+        // 1. Validation based on active fields
+        let errors = [];
+        if (workflowName.includes('budget')) {
+            if (!document.querySelector('input[name="metadata[budget_department]"]').value) errors.push('Department Code');
+            if (!document.querySelector('input[name="metadata[budget_fiscal_year]"]').value) errors.push('Fiscal Year');
+            if (!document.querySelector('input[name="metadata[budget_amount]"]').value) errors.push('Budget Amount');
+            if (!document.querySelector('input[name="metadata[budget_item_1]"]').value) errors.push('Target Item 1');
+            if (!document.querySelector('input[name="metadata[budget_item_2]"]').value) errors.push('Target Item 2');
+        } else if (workflowName.includes('procurement')) {
+            if (!document.getElementById('procurement_items').value) errors.push('Item Descriptions');
+            if (!document.getElementById('procurement_cost').value) errors.push('Estimated Cost');
+            if (!document.getElementById('budget_reference_select').value) errors.push('Budget Reference');
+        } else if (workflowName.includes('waiver')) {
+            if (!document.querySelector('input[name="metadata[fee_current_fee]"]').value) errors.push('Current Fee');
+            if (!document.querySelector('input[name="metadata[fee_requested_adjustment]"]').value) errors.push('Requested Adjustment');
+        }
+
+        if (errors.length > 0) {
+            e.preventDefault();
+            Swal.fire('Required Fields', 'Please fill in: ' + errors.join(', '), 'warning');
+            return;
+        }
+
+        // 2. Item Matching logic for Procurement
+        if (workflowName.includes('procurement')) {
+            const budgetId = budgetSelect.value;
+            if (budgetId) {
+                const budget = budgetsData.find(b => b.request_id == budgetId);
+                const bMeta = JSON.parse(budget.metadata);
+                const procItems = document.getElementById('procurement_items').value.toLowerCase();
+                
+                const item1 = (bMeta.budget_item_1 || "").toLowerCase();
+                const item2 = (bMeta.budget_item_2 || "").toLowerCase();
+
+                const hasItem1 = procItems.includes(item1);
+                const hasItem2 = procItems.includes(item2);
+
+                if (!hasItem1 || !hasItem2) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Budget Verification Failed',
+                        text: "This request cannot be submitted because there's no approved budget for it.",
+                        confirmButtonColor: '#3B82F6'
+                    });
+                }
+            }
         }
     });
 </script>

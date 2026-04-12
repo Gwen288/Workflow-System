@@ -154,15 +154,27 @@ class RequestController extends Controller {
         $request = $requestModel->find($id);
 
         if (!$request) {
-            die("Request not found");
+            http_response_code(404);
+            echo "Request not found";
+            return;
         }
 
         $auditLogModel = new AuditLog();
         $logs = $auditLogModel->getLogsForRequest($id);
+        
+        // Fetch linked budget if it's a procurement request
+        $linkedBudget = null;
+        if (!empty($request['metadata'])) {
+            $meta = json_decode($request['metadata'], true);
+            if (isset($meta['budget_reference_id'])) {
+                $linkedBudget = $requestModel->find($meta['budget_reference_id']);
+            }
+        }
 
         $this->view('requests/show', [
             'request' => $request,
-            'logs' => $logs
+            'logs' => $logs,
+            'linkedBudget' => $linkedBudget
         ]);
     }
 

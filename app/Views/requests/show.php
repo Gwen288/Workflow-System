@@ -42,6 +42,33 @@
                 <p class="text-sm font-semibold text-gray-500">Submitted On</p>
                 <p><?= date('M j, Y H:i', strtotime($request['submission_date'])) ?></p>
             </div>
+            <?php if (isset($linkedBudget) && $linkedBudget): 
+                $bMeta = json_decode($linkedBudget['metadata'], true);
+            ?>
+            <div class="col-span-2 mt-4 bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-start space-x-4">
+                <div class="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                </div>
+                <div>
+                    <h4 class="text-blue-900 font-bold text-sm">Funded by Approved Budget #<?= $linkedBudget['request_id'] ?></h4>
+                    <p class="text-xs text-blue-700 mt-0.5">This procurement is cross-validated against the following approved plan:</p>
+                    <div class="mt-3 grid grid-cols-2 gap-x-6 gap-y-2">
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-blue-400 tracking-wider">Approved Item 1</span>
+                            <span class="text-sm font-bold text-gray-800 italic">"<?= htmlspecialchars($bMeta['budget_item_1'] ?? 'N/A') ?>"</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] uppercase font-bold text-blue-400 tracking-wider">Approved Item 2</span>
+                            <span class="text-sm font-bold text-gray-800 italic">"<?= htmlspecialchars($bMeta['budget_item_2'] ?? 'N/A') ?>"</span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="block text-[10px] uppercase font-bold text-blue-400 tracking-wider">Allocated Amount</span>
+                            <span class="text-sm font-black text-gray-900">GHS <?= number_format(($bMeta['budget_amount'] ?? 0), 2) ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
 
 
@@ -51,6 +78,7 @@
             $feeAmount = 0;
             $budgetAmount = 0;
             $procurementAmount = 0;
+            $linkedBudgetAmount = 0;
             if (!empty($request['metadata'])) {
                 $meta = json_decode($request['metadata'], true);
                 
@@ -69,6 +97,12 @@
                 // Procurement Key
                 if (isset($meta['procurement_cost'])) {
                     $procurementAmount = floatval($meta['procurement_cost']);
+                }
+
+                // Linked Budget Amount
+                if (isset($linkedBudget)) {
+                    $lbMeta = json_decode($linkedBudget['metadata'], true);
+                    $linkedBudgetAmount = floatval($lbMeta['budget_amount'] ?? 0);
                 }
             }
         ?>
@@ -150,6 +184,8 @@
             const reqAmount = <?= $feeAmount ?>;
             const budgetAmount = <?= $budgetAmount ?>;
             const procurementAmount = <?= $procurementAmount ?>;
+            const linkedBudgetAmount = <?= $linkedBudgetAmount ?>;
+            const workflowType = <?= $request['workflow_type'] ?>;
             const userRole = '<?= auth_user()['role'] ?>';
             
             if (type === 'escalate') {
@@ -161,6 +197,25 @@
                 bodyData.target_role = role;
             } else if (type === 'reject' && !comment) {
                 Swal.fire('Required', 'Please provide a comment for rejecting.', 'info');
+                return;
+            }
+
+            // Budget Overrun Alert for Finance Officer
+            if (userRole === 'Finance Officer' && workflowType == 8 && linkedBudgetAmount > 0 && procurementAmount > linkedBudgetAmount && (type === 'approve' || type === 'reject')) {
+                Swal.fire({
+                    title: 'Caution: Budget Overrun',
+                    text: "This procurement exceeds its approved budget. This request should generally be escalated to the CFO for final authorization. Proceed anyway?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, proceed anyway',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        processFetch(url, bodyData);
+                    }
+                });
                 return;
             }
 
