@@ -93,7 +93,13 @@ class RequestController extends Controller {
             return true;
         });
 
-        $this->view('requests/create', ['workflows' => array_values($workflows)]);
+        $requestModel = new Request();
+        $approvedBudgets = $requestModel->getApprovedBudgetsForUser(auth());
+
+        $this->view('requests/create', [
+            'workflows' => array_values($workflows),
+            'approvedBudgets' => $approvedBudgets
+        ]);
     }
 
     public function store() {

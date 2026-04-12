@@ -133,8 +133,8 @@
                     <input type="number" step="0.01" name="metadata[budget_amount]" placeholder="0.00" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-gray-700 font-semibold mb-2">Budget Justification</label>
-                    <textarea name="metadata[budget_justification]" rows="3" placeholder="Why is this budget needed? What exactly does it cover?" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:border-blue-400 focus:ring-blue-100"></textarea>
+                    <label class="block text-gray-700 font-semibold mb-2">Budget Justification <span class="text-blue-500 font-normal italic">(Include two items that will be on your procurement form)</span></label>
+                    <textarea name="metadata[budget_justification]" rows="3" placeholder="Explain the need for this budget and list at least two specific items intended for procurement..." class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:border-blue-400 focus:ring-blue-100"></textarea>
                 </div>
             </div>
 
@@ -152,6 +152,53 @@
                     <label class="block text-gray-700 font-semibold mb-2">Vendor Preferences (if any)</label>
                     <input type="text" name="metadata[procurement_vendor]" placeholder="e.g., Office Supplies Ltd" class="appearance-none block w-full bg-white border border-gray-200 rounded-lg py-3 px-4 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-gray-700">
                 </div>
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 font-semibold mb-2">Budget Reference (Source of Funding)</label>
+                    <div class="relative">
+                        <select name="metadata[budget_reference_id]" id="budget_reference_select" class="block appearance-none w-full bg-white border border-gray-200 text-gray-700 py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 shadow-sm transition">
+                            <option value="">-- No linked budget --</option>
+                            <?php foreach ($approvedBudgets as $budget): 
+                                $bMeta = json_decode($budget['metadata'], true);
+                                $displayLabel = "Budget #" . $budget['request_id'] . " - GHS " . number_format(($bMeta['budget_amount'] ?? 0), 2) . " (" . ($bMeta['budget_fiscal_year'] ?? 'N/A') . ")";
+                            ?>
+                                <option value="<?= $budget['request_id'] ?>"><?= htmlspecialchars($displayLabel) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                    </div>
+                </div>
+
+                <!-- Budget Details Snapshot -->
+                <div id="budget-snapshot" class="md:col-span-2 hidden bg-blue-50/50 border border-blue-100 rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-blue-800 font-bold flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Approved Budget Snapshot (<span id="snap-id"></span>)
+                        </h4>
+                        <span id="snap-year" class="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded uppercase tracking-wider"></span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-3 rounded-lg border border-blue-50 shadow-sm">
+                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Approved Amount</span>
+                            <span id="snap-amount" class="text-xl font-black text-gray-900"></span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-blue-50 shadow-sm">
+                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</span>
+                            <span class="inline-flex items-center text-green-600 font-bold text-sm">
+                                <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span> Fully Approved
+                            </span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-blue-50 shadow-sm">
+                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Department</span>
+                            <span id="snap-dept" class="text-sm font-bold text-gray-800"></span>
+                        </div>
+                        <div class="md:col-span-2 bg-white/50 p-3 rounded-lg border border-blue-50">
+                            <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Justification & Procurement Items</span>
+                            <p id="snap-justification" class="text-sm text-gray-700 italic leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="md:col-span-2">
                     <label class="block text-gray-700 font-semibold mb-2">Urgency Level</label>
                     <div class="relative">
@@ -247,6 +294,35 @@
         } else if (text.includes('procurement')) {
             dynamicContainer.appendChild(fieldsProcurement);
             fieldsProcurement.classList.remove('hidden');
+        }
+    });
+
+    // Budget Linkage Logic
+    const budgetsData = <?= json_encode($approvedBudgets) ?>;
+    const budgetSelect = document.getElementById('budget_reference_select');
+    const budgetSnapshot = document.getElementById('budget-snapshot');
+    const snapId = document.getElementById('snap-id');
+    const snapYear = document.getElementById('snap-year');
+    const snapAmount = document.getElementById('snap-amount');
+    const snapDept = document.getElementById('snap-dept');
+    const snapJustification = document.getElementById('snap-justification');
+
+    budgetSelect.addEventListener('change', function() {
+        const id = this.value;
+        if (!id) {
+            budgetSnapshot.classList.add('hidden');
+            return;
+        }
+
+        const budget = budgetsData.find(b => b.request_id == id);
+        if (budget) {
+            const meta = JSON.parse(budget.metadata);
+            snapId.textContent = '#' + budget.request_id;
+            snapYear.textContent = meta.budget_fiscal_year || 'N/A';
+            snapDept.textContent = budget.department || 'N/A';
+            snapAmount.textContent = 'GHS ' + (parseFloat(meta.budget_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2}));
+            snapJustification.textContent = meta.budget_justification || 'No justification provided.';
+            budgetSnapshot.classList.remove('hidden');
         }
     });
 </script>

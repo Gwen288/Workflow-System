@@ -36,4 +36,16 @@ class Request extends Model {
                 ORDER BY r.submission_date DESC";
         return $this->rawQuery($sql, [$userId]);
     }
+
+    public function getApprovedBudgetsForUser($userId) {
+        $sql = "SELECT r.*, w.name as workflow_name, u.department 
+                FROM {$this->table} r
+                JOIN Workflow w ON r.workflow_type = w.workflow_id
+                JOIN User u ON r.submitted_by = u.user_id
+                WHERE w.name = 'Budget' 
+                  AND r.status = 'Approved' 
+                  AND r.submitted_by = ?
+                ORDER BY r.submission_date DESC";
+        return $this->rawQuery($sql, [$userId]);
+    }
 }
