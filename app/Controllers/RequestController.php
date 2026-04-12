@@ -210,19 +210,27 @@ class RequestController extends Controller {
 
         // Next phase logic can be handled by AI Service or hardcoded flow
         if ($request['status'] === 'Escalated') {
-            $userModel = new \App\Models\User();
-            $registryUsers = $userModel->findByRole('Registry');
-            $registryId = !empty($registryUsers) ? $registryUsers[0]['user_id'] : null;
-
-            if ($registryId) {
-                // Bounce back to Registry
+            if (auth_user()['role'] === 'CFO' || in_array($request['workflow_type'], [1, 7])) {
+                // Finalize it directly, original submitter (e.g. HOD) will see the final status natively
                 $requestModel->update($id, [
-                    'current_approver' => $registryId,
-                    'status' => 'Pending'
+                    'status' => $decision === 'Approved' ? 'Approved' : 'Rejected', 
+                    'current_approver' => null
                 ]);
             } else {
-                // Fallback if no registry exists
-                $requestModel->update($id, ['status' => $decision === 'Approved' ? 'Approved' : 'Rejected', 'current_approver' => null]);
+                $userModel = new \App\Models\User();
+                $registryUsers = $userModel->findByRole('Registry');
+                $registryId = !empty($registryUsers) ? $registryUsers[0]['user_id'] : null;
+
+                if ($registryId) {
+                    // Bounce back to Registry
+                    $requestModel->update($id, [
+                        'current_approver' => $registryId,
+                        'status' => 'Pending'
+                    ]);
+                } else {
+                    // Fallback if no registry exists
+                    $requestModel->update($id, ['status' => $decision === 'Approved' ? 'Approved' : 'Rejected', 'current_approver' => null]);
+                }
             }
         } else {
             $aiService = new AIService();
