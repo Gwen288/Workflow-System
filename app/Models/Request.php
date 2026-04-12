@@ -8,13 +8,24 @@ class Request extends Model {
     protected $primaryKey = 'request_id';
 
     public function getWithDetails() {
-        $sql = "SELECT r.*, w.name as workflow_name, u1.name as submitter_name, u2.name as approver_name, u2.role as approver_role
+        $sql = "SELECT r.*, w.name as workflow_name, u1.name as submitter_name, u1.role as submitter_role, u2.name as approver_name, u2.role as approver_role
                 FROM {$this->table} r
                 JOIN Workflow w ON r.workflow_type = w.workflow_id
                 JOIN User u1 ON r.submitted_by = u1.user_id
                 LEFT JOIN User u2 ON r.current_approver = u2.user_id
                 ORDER BY r.submission_date DESC";
         return $this->rawQuery($sql);
+    }
+
+    public function findWithDetails($id) {
+        $sql = "SELECT r.*, w.name as workflow_name, u1.name as submitter_name, u1.role as submitter_role, u1.department, u2.name as approver_name, u2.role as approver_role
+                FROM {$this->table} r
+                JOIN Workflow w ON r.workflow_type = w.workflow_id
+                JOIN User u1 ON r.submitted_by = u1.user_id
+                LEFT JOIN User u2 ON r.current_approver = u2.user_id
+                WHERE r.request_id = ? LIMIT 1";
+        $res = $this->rawQuery($sql, [$id]);
+        return count($res) > 0 ? $res[0] : null;
     }
 
     public function getPendingForUser($userId) {

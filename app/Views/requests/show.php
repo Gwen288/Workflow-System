@@ -2,14 +2,9 @@
     <div class="mb-6 flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-800">Request Details #<?= $request['request_id'] ?></h1>
         <div class="flex space-x-3">
-            <?php if(auth_user()['role'] === 'Student' && in_array($request['status'], ['Approved', 'Rejected'])): ?>
-            <a href="javascript:void(0)" onclick="alert('Downloading Document PDF...')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded shadow transition font-medium whitespace-nowrap flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                Download PDF
-            </a>
-            <?php endif; ?>
+
             <a href="<?= url('/requests/' . $request['request_id'] . '/document') ?>" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition font-medium whitespace-nowrap">
-                View Full Document
+                View Official Document
             </a>
             <?php $backUrl = auth_user()['role'] === 'Student' ? url('/dashboard') : url('/approvals'); ?>
             <a href="<?= $backUrl ?>" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded shadow transition font-medium whitespace-nowrap">

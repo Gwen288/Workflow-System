@@ -28,7 +28,7 @@
     <div class="flex h-screen bg-gray-50 dark:bg-gray-900 w-full transition-colors duration-200">
         <?php if (auth()): ?>
         <!-- Sidebar -->
-        <aside class="w-64 text-white flex flex-col shadow-xl z-20 flex-shrink-0" style="background-color: #3b5dd9;">
+        <aside class="w-64 text-white flex flex-col shadow-xl z-20 flex-shrink-0 print:hidden" style="background-color: #3b5dd9;">
             <div class="p-6 flex items-center mb-4">
                 <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-bold text-lg mr-3 shadow-sm">
                     PA
@@ -88,7 +88,7 @@
         <div class="flex-1 flex flex-col overflow-hidden">
             <?php if (auth()): ?>
             <!-- Top Navbar -->
-            <header class="bg-white dark:bg-gray-800 px-8 py-4 flex items-center justify-end shadow-sm z-10 border-b border-gray-100 dark:border-gray-700 transition-colors duration-200">
+            <header class="bg-white dark:bg-gray-800 px-8 py-4 flex items-center justify-end shadow-sm z-10 border-b border-gray-100 dark:border-gray-700 transition-colors duration-200 print:hidden">
                 <div class="flex items-center space-x-6">
                     <!-- Help Icon -->
                     <button class="text-gray-500 hover:text-gray-800 transition">
@@ -127,7 +127,7 @@
             <?php endif; ?>
 
             <!-- Scrollable Content Viewport -->
-            <main class="flex-1 flex items-center justify-center overflow-x-hidden overflow-y-auto bg-slate-50 dark:bg-[#111827] relative p-8 transition-colors duration-200">
+            <main class="flex-1 flex items-center justify-center overflow-x-hidden overflow-y-auto bg-slate-50 dark:bg-[#111827] relative p-8 transition-colors duration-200 print:p-0 print:bg-white">
                 <div class="w-full <?= !auth() ? 'max-w-md' : 'h-full' ?>">
                     <?= $content ?>
                 </div>

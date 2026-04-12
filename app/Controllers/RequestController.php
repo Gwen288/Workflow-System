@@ -152,7 +152,7 @@ class RequestController extends Controller {
 
     public function show($id) {
         $requestModel = new Request();
-        $request = $requestModel->find($id);
+        $request = $requestModel->findWithDetails($id);
         if (!$request) {
             http_response_code(404);
             echo "Request not found";
@@ -172,7 +172,7 @@ class RequestController extends Controller {
         if (!empty($request['metadata'])) {
             $meta = json_decode($request['metadata'], true);
             if (isset($meta['budget_reference_id'])) {
-                $linkedBudget = $requestModel->find($meta['budget_reference_id']);
+                $linkedBudget = $requestModel->findWithDetails($meta['budget_reference_id']);
             }
         }
 
@@ -185,10 +185,15 @@ class RequestController extends Controller {
 
     public function document($id) {
         $requestModel = new Request();
-        $request = $requestModel->find($id);
+        $request = $requestModel->findWithDetails($id);
 
         if (!$request) {
             die("Request not found");
+        }
+
+        // Logic to clear "Needs Attention" on read (synchronized with show method)
+        if ($request['status'] === 'Rejected' && $request['submitted_by'] == auth() && ($request['is_acknowledged'] ?? 0) == 0) {
+            $requestModel->update($id, ['is_acknowledged' => 1]);
         }
 
         $this->view('requests/document', [
