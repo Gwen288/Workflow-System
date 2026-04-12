@@ -11,8 +11,8 @@
 
     <div class="bg-white p-8 rounded-lg shadow-lg border border-gray-100">
         <!-- Render Actual Form Data -->
-        <?php if(!empty($request['metadata_json'])): 
-            $meta = json_decode($request['metadata_json'], true); 
+        <?php if(!empty($request['metadata'])): 
+            $meta = json_decode($request['metadata'], true); 
             if(is_array($meta)): ?>
             <div id="form-details" class="">
                 <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center border-b pb-3">

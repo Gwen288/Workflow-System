@@ -25,6 +25,8 @@ class RequestController extends Controller {
         header('Content-Type: application/json');
         $query = $_GET['q'] ?? '';
         $listType = $_GET['list'] ?? 'approvals'; // approvals, myRequests, all
+        $filterType = $_GET['filterType'] ?? '';
+
         
         $requestModel = new Request();
         if ($listType === 'myRequests') {
@@ -36,6 +38,12 @@ class RequestController extends Controller {
         }
 
         // Apply filtering natively in PHP
+        if (!empty($filterType)) {
+            $requests = array_filter($requests, function($req) use ($filterType) {
+                return $req['workflow_name'] === $filterType;
+            });
+        }
+
         if (!empty($query)) {
             $query = strtolower($query);
             $requests = array_filter($requests, function($req) use ($query) {
@@ -48,6 +56,7 @@ class RequestController extends Controller {
                        str_contains(strtolower($req['status']), $query);
             });
         }
+
         
         echo json_encode(array_values($requests));
         exit;

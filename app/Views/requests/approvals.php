@@ -14,10 +14,21 @@
             </div>
             
             <!-- Filters -->
-            <button class="bg-white border text-gray-700 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-50 transition flex items-center space-x-2">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                <span class="hidden sm:inline">All Types</span>
-            </button>
+            <div class="relative">
+                <select id="ajax-filter" class="appearance-none bg-white border border-gray-200 text-gray-700 font-medium py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition cursor-pointer">
+                    <option value="">All Types</option>
+                    <?php 
+                        $types = [];
+                        foreach($requests as $r) { $types[$r['workflow_name']] = 1; }
+                        foreach(array_keys($types) as $type): 
+                    ?>
+                        <option value="<?= htmlspecialchars($type) ?>"><?= htmlspecialchars($type) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -165,19 +176,22 @@
 
 <script>
     const searchInput = document.getElementById('ajax-search');
+    const filterInput = document.getElementById('ajax-filter');
     const tableBody = document.getElementById('request-table-body');
     const listType = '<?= isset($isMyRequests) ? "myRequests" : "approvals" ?>';
     const baseUrl = '<?= rtrim(url('/'), '/') ?>';
 
     let timeout = null;
-    searchInput.addEventListener('input', function(e) {
+    
+    function fetchResults() {
         clearTimeout(timeout);
-        const query = e.target.value;
+        const query = searchInput.value;
+        const filterType = filterInput.value;
         
         timeout = setTimeout(() => {
             tableBody.style.opacity = '0.5';
             
-            fetch(`${baseUrl}/requests/search?q=${encodeURIComponent(query)}&list=${listType}`)
+            fetch(`${baseUrl}/requests/search?q=${encodeURIComponent(query)}&list=${listType}&filterType=${encodeURIComponent(filterType)}`)
                 .then(response => response.json())
                 .then(data => {
                     let html = '';
@@ -252,5 +266,8 @@
                     tableBody.style.opacity = '1';
                 });
         }, 300);
-    });
+    }
+    
+    searchInput.addEventListener('input', fetchResults);
+    filterInput.addEventListener('change', fetchResults);
 </script>

@@ -84,14 +84,7 @@
 
             <!-- Dynamic Fields: Clearance Form -->
             <div id="fields_3" class="dynamic-fields hidden md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 w-full">
-                <div class="md:col-span-2">
-                    <label class="block text-gray-700 font-semibold mb-2">Areas to Clear</label>
-                    <div class="flex flex-wrap gap-4">
-                        <label class="inline-flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer bg-white"><input type="checkbox" name="metadata[clearance_library]" value="yes" class="form-checkbox h-4 w-4 text-blue-600"><span class="ml-2 font-medium text-gray-700">Library</span></label>
-                        <label class="inline-flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer bg-white"><input type="checkbox" name="metadata[clearance_dormitory]" value="yes" class="form-checkbox h-4 w-4 text-blue-600"><span class="ml-2 font-medium text-gray-700">Dormitory</span></label>
-                        <label class="inline-flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer bg-white"><input type="checkbox" name="metadata[clearance_finance]" value="yes" class="form-checkbox h-4 w-4 text-blue-600"><span class="ml-2 font-medium text-gray-700">Finance</span></label>
-                    </div>
-                </div>
+
                 <div class="md:col-span-2">
                     <label class="block text-gray-700 font-semibold mb-2">Reason for Clearance</label>
                     <input type="text" name="metadata[clearance_reason]" placeholder="e.g. Graduation, Transfer, Leave of Absence" class="appearance-none block w-full bg-white text-gray-700 border border-gray-200 rounded-lg py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400">

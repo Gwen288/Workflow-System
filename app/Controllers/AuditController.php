@@ -39,6 +39,11 @@ class AuditController extends Controller {
                 WHERE 1=1 ";
         
         $params = [];
+
+        if (auth_user()['role'] === 'HOD') {
+            $sql .= " AND r.submitted_by = ? ";
+            $params[] = auth();
+        }
         
         if (!empty($search)) {
             $sql .= " AND (w.name LIKE ? OR u1.name LIKE ? OR r.request_id LIKE ? OR r.status LIKE ?)";
