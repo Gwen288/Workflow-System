@@ -49,10 +49,14 @@
         <?php if ($request['current_approver'] == auth() && in_array($request['status'], ['Pending', 'Escalated'])): ?>
         <?php
             $feeAmount = 0;
+            $budgetAmount = 0;
             if (!empty($request['metadata'])) {
                 $meta = json_decode($request['metadata'], true);
                 if (isset($meta['fee_amount'])) {
                     $feeAmount = floatval($meta['fee_amount']);
+                }
+                if (isset($meta['budget_amount'])) {
+                    $budgetAmount = floatval($meta['budget_amount']);
                 }
             }
         ?>
@@ -93,33 +97,9 @@
             <p id="action-msg" class="text-sm mt-3 font-semibold"></p>
         </div>
         
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-        function handleAction(type) {
-            const comment = document.getElementById('action-comment').value;
-            let url = '<?= url('/requests/' . $request['request_id']) ?>/' + type;
-            let bodyData = { comment: comment };
-            
-            const reqAmount = <?= $feeAmount ?>;
-            const userRole = '<?= auth_user()['role'] ?>';
-            
-            if (userRole === 'Finance Officer' && reqAmount >= 10000 && (type === 'approve' || type === 'reject')) {
-                if (!confirm('Caution: Fee Adjustment amounts of GHS 10,000 or above are typically approved or rejected by the CFO. Are you sure you want to proceed yourself instead of escalating?')) {
-                    return;
-                }
-            }
-            
-            if (type === 'escalate') {
-                const role = document.getElementById('escalate-role').value;
-                if (!role) {
-                    alert('Please select a role to escalate to.');
-                    return;
-                }
-                bodyData.target_role = role;
-            } else if (type === 'reject' && !comment) {
-                alert('Please provide a comment for rejecting.');
-                return;
-            }
-
+        function processFetch(url, bodyData) {
             document.getElementById('action-msg').innerHTML = '<span class="text-blue-500">Processing...</span>';
             
             fetch(url, {
@@ -133,14 +113,63 @@
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    document.getElementById('action-msg').innerHTML = '<span class="text-green-600">Successfully updated. Refreshing...</span>';
-                    setTimeout(() => window.location.reload(), 1000);
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Action completed successfully.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => window.location.reload());
                 } else {
-                    document.getElementById('action-msg').innerHTML = '<span class="text-red-600">Error: ' + (data.error || 'Failed') + '</span>';
+                    Swal.fire('Error', (data.error || 'Failed to process request.'), 'error');
+                    document.getElementById('action-msg').innerHTML = '';
                 }
             }).catch(e => {
-                document.getElementById('action-msg').innerHTML = '<span class="text-red-600">Network error.</span>';
+                Swal.fire('Network Error', 'Could not connect to the server.', 'error');
+                document.getElementById('action-msg').innerHTML = '';
             });
+        }
+
+        function handleAction(type) {
+            const comment = document.getElementById('action-comment').value;
+            let url = '<?= url('/requests/' . $request['request_id']) ?>/' + type;
+            let bodyData = { comment: comment };
+            
+            const reqAmount = <?= $feeAmount ?>;
+            const budgetAmount = <?= $budgetAmount ?>;
+            const userRole = '<?= auth_user()['role'] ?>';
+            
+            if (type === 'escalate') {
+                const role = document.getElementById('escalate-role').value;
+                if (!role) {
+                    Swal.fire('Warning', 'Please select a role to escalate to.', 'warning');
+                    return;
+                }
+                bodyData.target_role = role;
+            } else if (type === 'reject' && !comment) {
+                Swal.fire('Required', 'Please provide a comment for rejecting.', 'info');
+                return;
+            }
+
+            if (userRole === 'Finance Officer' && (reqAmount >= 10000 || budgetAmount >= 10000) && (type === 'approve' || type === 'reject')) {
+                Swal.fire({
+                    title: 'Caution: High Value',
+                    text: "Amounts of GHS 10,000 or above are generally overseen by the CFO. Are you sure you want to process this yourself instead of escalating?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, proceed anyway',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        processFetch(url, bodyData);
+                    }
+                });
+                return; // wait for promise
+            }
+            
+            processFetch(url, bodyData);
         }
         </script>
         <?php endif; ?>
