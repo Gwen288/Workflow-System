@@ -55,7 +55,7 @@
                     <span class="ml-3 font-medium">My Requests</span>
                 </a>
                 <?php endif; ?>
-                <?php if (!auth_user() || auth_user()['role'] !== 'CFO'): ?>
+                <?php if (!auth_user() || !in_array(auth_user()['role'], ['CFO', 'Logistics'])): ?>
                 <a href="<?= url('/requests/create') ?>" class="flex items-center px-5 py-3 mx-4 rounded-xl <?= strpos($_SERVER['REQUEST_URI'], '/requests/create') !== false ? 'bg-blue-700/50 shadow-inner text-white block' : 'text-blue-100 hover:bg-blue-700/30 hover:text-white transition-colors' ?>">
                     <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     <span class="ml-3 font-medium">Create Request</span>

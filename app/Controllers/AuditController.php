@@ -40,6 +40,18 @@ class AuditController extends Controller {
         if (in_array(auth_user()['role'], ['Finance Officer', 'CFO'])) {
             $sql .= " AND w.name != 'Introductory Letter' ";
         }
+
+        if (auth_user()['role'] === 'Library') {
+            $sql .= " AND w.name = 'Clearance' ";
+        }
+
+        if (auth_user()['role'] === 'Logistics') {
+            $sql .= " AND w.name = 'Procurement' ";
+        }
+
+        if (auth_user()['role'] === 'Registry') {
+            $sql .= " AND w.name IN ('Clearance', 'Introductory Letter', 'English Proficiency Letter', 'Transcript') ";
+        }
         
         if (!empty($search)) {
             $sql .= " AND (w.name LIKE ? OR u1.name LIKE ? OR r.request_id LIKE ? OR r.status LIKE ?)";
@@ -83,6 +95,18 @@ class AuditController extends Controller {
 
         if (in_array(auth_user()['role'], ['Finance Officer', 'CFO'])) {
             $sql .= " AND w.name != 'Introductory Letter' ";
+        }
+
+        if (auth_user()['role'] === 'Library') {
+            $sql .= " AND w.name = 'Clearance' ";
+        }
+
+        if (auth_user()['role'] === 'Logistics') {
+            $sql .= " AND w.name = 'Procurement' ";
+        }
+
+        if (auth_user()['role'] === 'Registry') {
+            $sql .= " AND w.name IN ('Clearance', 'Introductory Letter', 'English Proficiency Letter', 'Transcript') ";
         }
         
         if (!empty($query)) {

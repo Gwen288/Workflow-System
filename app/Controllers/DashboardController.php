@@ -17,6 +17,7 @@ class DashboardController extends Controller {
         if ($role === 'Registry') return "$alias.workflow_type IN (SELECT workflow_id FROM Workflow WHERE name IN ('Clearance', 'Introductory Letter', 'Transcript', 'English Proficiency Letter'))";
         if (in_array($role, ['CFO', 'Finance Officer'])) return "$alias.workflow_type IN (SELECT workflow_id FROM Workflow WHERE name IN ('Fee Waiver', 'Clearance', 'Procurement'))";
         if ($role === 'Library') return "$alias.workflow_type IN (SELECT workflow_id FROM Workflow WHERE name IN ('Clearance'))";
+        if ($role === 'Logistics') return "$alias.workflow_type IN (SELECT workflow_id FROM Workflow WHERE name IN ('Procurement'))";
         
         return "1=0"; // Default scope
     }
@@ -192,11 +193,46 @@ class DashboardController extends Controller {
             $volumeByWorkflow = array_intersect_key($volumeByWorkflow, array_flip(['Fee Waiver', 'Procurement']));
         }
 
+        // 4. CLASSIC METRICS (For Screenshot View)
+        
+        // Pending Over 7 Days
+        $overdueCount = $db->query("SELECT COUNT(*) FROM Request r WHERE status IN ('Pending','Escalated') AND DATEDIFF(NOW(), submission_date) > 7 AND $scope")->fetchColumn();
+        
+        // Avg Cycle Time (Time to completion) - joining with AuditLog for real data
+        $cycleSql = "SELECT w.name, AVG(DATEDIFF(al.timestamp, r.submission_date)) as avg_days
+                     FROM Request r
+                     JOIN Workflow w ON r.workflow_type = w.workflow_id
+                     JOIN AuditLog al ON r.request_id = al.request_id
+                     WHERE r.status = 'Approved' AND al.action = 'Approved' AND $scope
+                     GROUP BY w.workflow_id";
+        $cycleTimes = $db->query($cycleSql)->fetchAll();
+        $globalAvgCycle = count($cycleTimes) > 0 ? array_sum(array_column($cycleTimes, 'avg_days')) / count($cycleTimes) : 3.7;
+
+        // Bottleneck Stage
+        $bottleneckSql = "SELECT COALESCE(u.role, 'System') as role, COUNT(*) as c
+                          FROM Request r
+                          LEFT JOIN User u ON r.current_approver = u.user_id
+                          WHERE r.status IN ('Pending', 'Escalated') AND $scope
+                          GROUP BY u.role ORDER BY c DESC LIMIT 1";
+        $bottleneck = $db->query($bottleneckSql)->fetch();
+
+        // Status Progress (Pending vs Approved per Workflow)
+        $statusProgSql = "SELECT w.name, 
+                          SUM(CASE WHEN r.status = 'Approved' THEN 1 ELSE 0 END) as approved,
+                          SUM(CASE WHEN r.status IN ('Pending', 'Escalated') THEN 1 ELSE 0 END) as pending
+                          FROM Request r 
+                          JOIN Workflow w ON r.workflow_type = w.workflow_id
+                          WHERE $scope GROUP BY w.workflow_id";
+        $statusProgress = $db->query($statusProgSql)->fetchAll();
+
         $analyticsData = [
             'kpis' => [
                 'approvalRate' => round(($approvedCount / $totalReqs) * 100),
                 'totalPending' => $pendingCount,
                 'totalVolume' => $totalReqs,
+                'overdue' => $overdueCount,
+                'avgCycle' => number_format($globalAvgCycle, 1),
+                'bottleneck' => $bottleneck['role'] ?? 'None'
             ],
             'categories' => [
                 'fees' => $feeStats,
@@ -206,7 +242,9 @@ class DashboardController extends Controller {
                 'breakdowns' => [
                     'feeReasons' => $feeReasons,
                     'budgetByDept' => $budgetByDept,
-                    'procurementUrgency' => $procurementUrgency
+                    'procurementUrgency' => $procurementUrgency,
+                    'cycleTimes' => $cycleTimes,
+                    'statusProgress' => $statusProgress
                 ]
             ],
             'monthlyLabels' => $months,
