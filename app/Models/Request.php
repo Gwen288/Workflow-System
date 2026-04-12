@@ -8,7 +8,7 @@ class Request extends Model {
     protected $primaryKey = 'request_id';
 
     public function getWithDetails() {
-        $sql = "SELECT r.*, w.name as workflow_name, u1.name as submitter_name, u2.name as approver_name
+        $sql = "SELECT r.*, w.name as workflow_name, u1.name as submitter_name, u2.name as approver_name, u2.role as approver_role
                 FROM {$this->table} r
                 JOIN Workflow w ON r.workflow_type = w.workflow_id
                 JOIN User u1 ON r.submitted_by = u1.user_id
@@ -27,7 +27,7 @@ class Request extends Model {
     }
 
     public function getSubmittedByUser($userId) {
-        $sql = "SELECT r.*, w.name as workflow_name, u1.name as submitter_name, u2.name as approver_name
+        $sql = "SELECT r.*, w.name as workflow_name, u1.name as submitter_name, u2.name as approver_name, u2.role as approver_role
                 FROM {$this->table} r
                 JOIN Workflow w ON r.workflow_type = w.workflow_id
                 JOIN User u1 ON r.submitted_by = u1.user_id

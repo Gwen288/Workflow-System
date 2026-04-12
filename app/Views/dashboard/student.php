@@ -108,9 +108,9 @@ foreach($myRequests as $req) {
                         <?php elseif($req['status'] == 'Rejected'): ?>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>
                         <?php elseif($req['status'] == 'Escalated'): ?>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Escalated</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">At CFO</span>
                         <?php else: ?>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Pending</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">At <?= htmlspecialchars($req['approver_role'] ?? 'Registry') ?></span>
                         <?php endif; ?>
                     </div>
                 </div>

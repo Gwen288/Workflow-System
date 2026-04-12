@@ -100,7 +100,7 @@
                 }
 
                 // Linked Budget Amount
-                if (isset($linkedBudget)) {
+                if (!empty($linkedBudget) && is_array($linkedBudget)) {
                     $lbMeta = json_decode($linkedBudget['metadata'], true);
                     $linkedBudgetAmount = floatval($lbMeta['budget_amount'] ?? 0);
                 }

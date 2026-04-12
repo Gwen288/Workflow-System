@@ -130,15 +130,18 @@
                                 <td class="py-4 px-6 text-sm text-gray-600">
                                     <?= date('M j, Y g:i A', strtotime($req['submission_date'])) ?>
                                 </td>
-                            <td class="py-4 px-6">
-                                <?php if($req['status'] === 'Approved'): ?>
-                                    <span class="inline-flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Approved</span></span>
-                                <?php elseif($req['status'] === 'Rejected'): ?>
-                                    <span class="inline-flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span><span class="text-sm font-semibold text-red-700">Rejected</span></span>
-                                <?php else: ?>
-                                    <span class="inline-flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-yellow-400"></span><span class="text-sm font-semibold text-yellow-700">In Progress</span></span>
-                                <?php endif; ?>
-                            </td>
+                                <td class="py-4 px-6">
+                                    <?php if($req['status'] === 'Approved'): ?>
+                                        <span class="inline-flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Approved</span></span>
+                                    <?php elseif($req['status'] === 'Rejected'): ?>
+                                        <span class="inline-flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span><span class="text-sm font-semibold text-red-700">Rejected</span></span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center space-x-1.5" title="Currently with <?= htmlspecialchars($req['approver_name'] ?? 'next reviewer') ?>">
+                                            <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                                            <span class="text-sm font-semibold text-yellow-700">At <?= htmlspecialchars($req['approver_role'] ?? 'Review') ?></span>
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
                         </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
