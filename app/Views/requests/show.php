@@ -50,13 +50,25 @@
         <?php
             $feeAmount = 0;
             $budgetAmount = 0;
+            $procurementAmount = 0;
             if (!empty($request['metadata'])) {
                 $meta = json_decode($request['metadata'], true);
+                
+                // Fee Waiver Keys
                 if (isset($meta['fee_amount'])) {
                     $feeAmount = floatval($meta['fee_amount']);
+                } elseif (isset($meta['fee_requested_adjustment'])) {
+                    $feeAmount = floatval($meta['fee_requested_adjustment']);
                 }
+                
+                // Budget Key
                 if (isset($meta['budget_amount'])) {
                     $budgetAmount = floatval($meta['budget_amount']);
+                }
+                
+                // Procurement Key
+                if (isset($meta['procurement_cost'])) {
+                    $procurementAmount = floatval($meta['procurement_cost']);
                 }
             }
         ?>
@@ -137,6 +149,7 @@
             
             const reqAmount = <?= $feeAmount ?>;
             const budgetAmount = <?= $budgetAmount ?>;
+            const procurementAmount = <?= $procurementAmount ?>;
             const userRole = '<?= auth_user()['role'] ?>';
             
             if (type === 'escalate') {

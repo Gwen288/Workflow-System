@@ -14,12 +14,12 @@ class AIService {
         
         $role = null;
 
-        // Workflow Types: 1=Fee Waiver, 3=Clearance, 4=Intro Letter, 5=Transcript, 6=English Proficiency, 7=Budget
-        if (in_array($workflowType, [1, 7])) { 
-            // Fee Waiver and Budget route to Finance
+        // Workflow Types: 1=Fee Waiver, 7=Budget, 8=Procurement
+        if (in_array($workflowType, [1, 7, 8])) { 
+            // Fee Waiver, Budget, and Procurement route to Finance
             $role = ($step === 1) ? 'Finance Officer' : (($step === 2) ? 'CFO' : null);
         } else if (in_array($workflowType, [3, 4, 5, 6])) { 
-            // Everything else routes to Registry initially
+            // Everything else (Clearance, Letters) routes to Registry initially
             $role = ($step === 1) ? 'Registry' : null;
         }
 
