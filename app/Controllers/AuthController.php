@@ -36,13 +36,18 @@ class AuthController extends Controller {
     }
 
     public function register() {
-        $name = $_POST['name'] ?? '';
+        $firstName = $_POST['first_name'] ?? '';
+        $lastName = $_POST['last_name'] ?? '';
         $email = $_POST['email'] ?? '';
-        $role = $_POST['role'] ?? '';
         $password = $_POST['password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
 
-        if (empty($name) || empty($email) || empty($role) || empty($password)) {
+        if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
             return $this->view('auth/register', ['error' => 'All fields are required.']);
+        }
+
+        if ($password !== $confirmPassword) {
+            return $this->view('auth/register', ['error' => 'Passwords do not match.']);
         }
 
         $userModel = new User();
@@ -54,12 +59,14 @@ class AuthController extends Controller {
 
         // Hash password and save
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $role = 'Student'; // Default role
+        $name = trim($firstName . ' ' . $lastName);
         $userId = $userModel->create([
             'name' => $name,
             'email' => $email,
             'role' => $role,
             'password' => $hashedPassword,
-            'department' => strpos($role, 'Finance') !== false ? 'Finance' : 'General'
+            'department' => 'General'
         ]);
 
         if ($userId) {

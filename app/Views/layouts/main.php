@@ -343,8 +343,8 @@
             </div>
 
             <!-- Scrollable Content Viewport -->
-            <main class="flex-1 flex items-center justify-center overflow-x-hidden overflow-y-auto bg-slate-50 dark:bg-[#111827] relative p-8 transition-colors duration-200 print:p-0 print:bg-white">
-                <div class="w-full <?= !auth() ? 'max-w-md' : 'h-full' ?>">
+            <main class="flex-1 flex overflow-x-hidden overflow-y-auto bg-slate-50 dark:bg-[#111827] relative transition-colors duration-200 print:p-0 print:bg-white <?= auth() ? 'p-8' : '' ?>">
+                <div class="w-full h-full">
                     <?= $content ?>
                 </div>
             </main>
