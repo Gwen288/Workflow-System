@@ -32,15 +32,38 @@ class DashboardController extends Controller {
         
         if ($user['role'] === 'Admin') {
             $allRequests = $requestModel->getWithDetails();
-        } else {
-            $pendingRequests = $requestModel->getPendingForUser($user['user_id']);
-            $myRequests = $requestModel->getSubmittedByUser($user['user_id']);
+            $aiService = new AIService();
+            $insights = $aiService->generateDashboardInsights($user['role']);
+            
+            // Administrative Mission Control Data
+            $db = \App\Core\Database::getInstance();
+            $totalUsers = $db->query("SELECT COUNT(*) FROM User")->fetchColumn();
+            $activeWorkflows = $db->query("SELECT COUNT(*) FROM Workflow")->fetchColumn();
+            $recentAudit = $db->query("SELECT al.*, u.name as user_name, r.workflow_type, w.name as workflow_name 
+                                    FROM AuditLog al 
+                                    JOIN User u ON al.performed_by = u.user_id 
+                                    JOIN Request r ON al.request_id = r.request_id
+                                    JOIN Workflow w ON r.workflow_type = w.workflow_id
+                                    ORDER BY al.timestamp DESC LIMIT 5")->fetchAll();
+            
+            $deptStats = $db->query("SELECT department, COUNT(*) as count FROM User GROUP BY department")->fetchAll();
+
+            $this->view('dashboard/admin', [
+                'allRequests' => $allRequests,
+                'insights' => $insights,
+                'metrics' => [
+                    'totalUsers' => $totalUsers,
+                    'activeWorkflows' => $activeWorkflows,
+                    'recentAudit' => $recentAudit,
+                    'deptStats' => $deptStats
+                ]
+            ]);
+            return;
         }
-        
-        $aiService = new AIService();
-        $insights = $aiService->generateDashboardInsights($user['role']);
 
         if ($user['role'] === 'Student') {
+            $aiService = new AIService();
+            $insights = $aiService->generateDashboardInsights($user['role']);
             $this->view('dashboard/student', [
                 'myRequests' => $myRequests,
                 'insights' => $insights
@@ -198,7 +221,7 @@ class DashboardController extends Controller {
         // Pending Over 7 Days
         $overdueCount = $db->query("SELECT COUNT(*) FROM Request r WHERE status IN ('Pending','Escalated') AND DATEDIFF(NOW(), submission_date) > 7 AND $scope")->fetchColumn();
         
-        // Avg Cycle Time (Time to completion) - joining with AuditLog for real data
+        // Avg Cycle Time (Time to completion) - Recalibrated to join Request with its final Approval event
         $cycleSql = "SELECT w.name, AVG(DATEDIFF(al.timestamp, r.submission_date)) as avg_days
                      FROM Request r
                      JOIN Workflow w ON r.workflow_type = w.workflow_id
@@ -207,6 +230,9 @@ class DashboardController extends Controller {
                      GROUP BY w.workflow_id";
         $cycleTimes = $db->query($cycleSql)->fetchAll();
         $globalAvgCycle = count($cycleTimes) > 0 ? array_sum(array_column($cycleTimes, 'avg_days')) / count($cycleTimes) : 3.7;
+
+        // Priority Distribution
+        $priorityStats = $db->query("SELECT priority_level as level, COUNT(*) as count FROM Request WHERE $scope GROUP BY level")->fetchAll();
 
         // Bottleneck Stage
         $bottleneckSql = "SELECT COALESCE(u.role, 'System') as role, COUNT(*) as c
@@ -233,7 +259,8 @@ class DashboardController extends Controller {
                 'totalVolume' => $totalReqs,
                 'overdue' => $overdueCount,
                 'avgCycle' => number_format($globalAvgCycle, 1),
-                'bottleneck' => $bottleneck['role'] ?? 'None'
+                'bottleneck' => $bottleneck['role'] ?? 'None',
+                'totalUsers' => (auth_user()['role'] === 'Admin') ? $db->query("SELECT COUNT(*) FROM User")->fetchColumn() : null
             ],
             'categories' => [
                 'fees' => $feeStats,
@@ -245,7 +272,8 @@ class DashboardController extends Controller {
                     'budgetByDept' => $budgetByDept,
                     'procurementUrgency' => $procurementUrgency,
                     'cycleTimes' => $cycleTimes,
-                    'statusProgress' => $statusProgress
+                    'statusProgress' => $statusProgress,
+                    'priorityMix' => $priorityStats
                 ]
             ],
             'monthlyLabels' => $months,

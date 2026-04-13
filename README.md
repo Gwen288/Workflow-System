@@ -31,7 +31,7 @@ The project follows a clean MVC structure:
 ## 🛡 Role Mapping
 *   **Student**: Initiates clearances and tracks personal requests.
 *   **Staff / HOD**: Initiates procurement and departmental requests.
-*   **Finance/Registry/Library**: Specialized approvers for financial, archival, and resource-based clearances.
+*   **Finance/Registry/Library/Logistics**: Specialized approvers for financial, archival, and resource-based clearances.
 *   **Admin(to be implemented)**: Total system oversight (Bootstrap account required for initial management).
 
 ---

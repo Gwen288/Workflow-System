@@ -24,6 +24,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\RequestController;
 use App\Controllers\AuditController;
 use App\Controllers\SettingsController;
+use App\Controllers\UserController;
 
 $router = new Router();
 
@@ -57,5 +58,10 @@ $router->get('/analytics', [DashboardController::class, 'analytics']);
 $router->get('/audit', [AuditController::class, 'index']);
 $router->get('/settings', [SettingsController::class, 'index']);
 $router->post('/settings/profile', [SettingsController::class, 'updateProfile']);
+
+// User Management (Admin Only)
+$router->get('/users', [UserController::class, 'index']);
+$router->get('/users/edit/{id}', [UserController::class, 'edit']);
+$router->post('/users/update/{id}', [UserController::class, 'update']);
 
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
