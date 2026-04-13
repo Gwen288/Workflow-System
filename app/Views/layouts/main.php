@@ -106,16 +106,16 @@
             <header class="bg-white dark:bg-gray-800 px-8 py-4 flex items-center justify-end shadow-sm z-10 border-b border-gray-100 dark:border-gray-700 transition-colors duration-200 print:hidden">
             <div class="flex items-center space-x-6">
                 <!-- Help Icon -->
-                <button onclick="toggleHelpModal()" class="text-gray-400 hover:text-indigo-600 transition-all p-2 rounded-xl hover:bg-indigo-50 active:scale-95" title="System Guidance">
+                <button onclick="toggleHelpModal()" class="text-slate-500 dark:text-gray-400 hover:text-indigo-600 transition-all p-2.5 rounded-2xl bg-slate-50 dark:bg-gray-700/50 hover:bg-indigo-50 active:scale-95 border border-slate-100 dark:border-gray-700" title="System Guidance">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </button>
-
+ 
                 <!-- Notification Center -->
                 <div class="relative">
-                    <button onclick="toggleNotifications()" class="text-gray-400 hover:text-indigo-600 transition-all p-2 rounded-xl hover:bg-indigo-50 relative active:scale-95">
+                    <button onclick="toggleNotifications()" class="text-slate-500 dark:text-gray-400 hover:text-indigo-600 transition-all p-2.5 rounded-2xl bg-slate-50 dark:bg-gray-700/50 hover:bg-indigo-50 relative active:scale-95 border border-slate-100 dark:border-gray-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                         <?php if (count($notifications) > 0): ?>
-                            <span class="absolute top-1.5 right-1.5 bg-rose-500 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white animate-pulse">
+                            <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-pulse">
                                 <?= count($notifications) ?>
                             </span>
                         <?php endif; ?>
@@ -124,8 +124,10 @@
                     <!-- Notification Dropdown -->
                     <div id="notification-dropdown" class="hidden absolute right-0 mt-4 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden transform transition-all duration-300 origin-top-right">
                         <div class="px-5 py-4 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
-                            <h3 class="font-black text-[10px] uppercase tracking-widest text-gray-500">Intelligence Alerts</h3>
-                            <span class="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full"><?= count($notifications) ?> New</span>
+                            <h3 class="font-black text-[10px] uppercase tracking-widest text-gray-500">
+                                <?= auth_user()['role'] === 'Admin' ? 'System Oversight Alerts' : 'Intelligence Alerts' ?>
+                            </h3>
+                            <span class="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full"><?= count($notifications) ?> <?= auth_user()['role'] === 'Admin' ? 'Critical' : 'New' ?></span>
                         </div>
                         <div class="max-h-96 overflow-y-auto custom-scrollbar">
                             <?php if (empty($notifications)): ?>

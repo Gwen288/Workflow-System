@@ -57,6 +57,16 @@ class Request extends Model {
                     WHERE r.submitted_by = ? AND r.status = 'Rejected' AND r.is_acknowledged = 0
                     ORDER BY r.submission_date DESC";
             return $this->rawQuery($sql, [$userId]);
+        } elseif ($role === 'Admin') {
+            // Admins see system-wide critical alerts: Escalated or Overdue (> 7 days)
+            $sql = "SELECT r.*, w.name as workflow_name, 'Critical Alert' as notify_type, u.name as submitter_name
+                    FROM {$this->table} r
+                    JOIN Workflow w ON r.workflow_type = w.workflow_id
+                    JOIN User u ON r.submitted_by = u.user_id
+                    WHERE r.status = 'Escalated' 
+                    OR (r.status IN ('Pending', 'Escalated') AND DATEDIFF(NOW(), r.submission_date) > 7)
+                    ORDER BY r.submission_date DESC LIMIT 15";
+            return $this->rawQuery($sql);
         } else {
             // Staff care about items waiting for their approval
             $sql = "SELECT r.*, w.name as workflow_name, 'Pending Approval' as notify_type, u.name as submitter_name

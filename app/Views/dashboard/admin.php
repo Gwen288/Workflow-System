@@ -11,10 +11,10 @@
                 <div class="w-2 h-2 rounded-full bg-emerald-500 mr-3 animate-pulse"></div>
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Health: <span class="text-slate-900 dark:text-white">OPTIMAL</span></span>
             </div>
-            <div class="bg-indigo-600 px-6 py-3 rounded-2xl shadow-xl shadow-indigo-200 dark:shadow-none flex items-center cursor-pointer hover:bg-indigo-700 transition-colors">
-                <svg class="w-4 h-4 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                <span class="text-[10px] font-black text-white uppercase tracking-widest">Export Insight</span>
-            </div>
+            <button onclick="window.print()" class="bg-indigo-600 px-6 py-3 rounded-2xl shadow-xl shadow-indigo-200 dark:shadow-none flex items-center cursor-pointer hover:bg-indigo-700 active:scale-95 transition-all text-white border-0 group">
+                <svg class="w-4 h-4 text-white mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span class="text-[10px] font-black uppercase tracking-widest">Export Insight</span>
+            </button>
         </div>
     </div>
 
