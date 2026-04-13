@@ -48,14 +48,31 @@ class Request extends Model {
         return $this->rawQuery($sql, [$userId]);
     }
 
+    public function getNotificationsForUser($userId, $role) {
+        if ($role === 'Student') {
+            // Students only care about rejected requests they haven't seen
+            $sql = "SELECT r.*, w.name as workflow_name, 'Action Required' as notify_type 
+                    FROM {$this->table} r
+                    JOIN Workflow w ON r.workflow_type = w.workflow_id
+                    WHERE r.submitted_by = ? AND r.status = 'Rejected' AND r.is_acknowledged = 0
+                    ORDER BY r.submission_date DESC";
+            return $this->rawQuery($sql, [$userId]);
+        } else {
+            // Staff care about items waiting for their approval
+            $sql = "SELECT r.*, w.name as workflow_name, 'Pending Approval' as notify_type, u.name as submitter_name
+                    FROM {$this->table} r
+                    JOIN Workflow w ON r.workflow_type = w.workflow_id
+                    JOIN User u ON r.submitted_by = u.user_id
+                    WHERE r.current_approver = ? AND r.status IN ('Pending', 'Escalated')
+                    ORDER BY r.submission_date DESC";
+            return $this->rawQuery($sql, [$userId]);
+        }
+    }
+
     public function getApprovedBudgetsForUser($userId) {
-        $sql = "SELECT r.*, w.name as workflow_name, u.department 
-                FROM {$this->table} r
+        $sql = "SELECT r.* FROM {$this->table} r
                 JOIN Workflow w ON r.workflow_type = w.workflow_id
-                JOIN User u ON r.submitted_by = u.user_id
-                WHERE w.name = 'Budget' 
-                  AND r.status = 'Approved' 
-                  AND r.submitted_by = ?
+                WHERE w.name = 'Budget' AND r.status = 'Approved' AND r.submitted_by = ?
                 ORDER BY r.submission_date DESC";
         return $this->rawQuery($sql, [$userId]);
     }

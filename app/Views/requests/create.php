@@ -238,13 +238,13 @@
             <div class="my-8">
                 <label class="block text-gray-700 font-semibold mb-3">Supporting Documents (Optional)</label>
                 <div class="w-full flex justify-center px-6 py-10 border-2 border-blue-200 border-dashed rounded-xl bg-[#f8fbff] hover:bg-[#f0f6ff] transition-colors relative cursor-pointer" id="drop-area">
-                    <input type="file" name="attachment" id="file-input" class="absolute w-full h-full opacity-0 cursor-pointer" accept=".pdf,.doc,.docx" />
+                    <input type="file" name="attachment" id="file-input" class="absolute w-full h-full opacity-0 cursor-pointer" accept=".pdf" />
                     <div class="space-y-2 text-center flex flex-col items-center">
                         <div class="text-blue-500 bg-white shadow-sm rounded-full w-12 h-12 flex items-center justify-center mb-2">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                         </div>
                         <div class="text-gray-700 font-medium">Drag and drop files here or click to browse</div>
-                        <p class="text-xs text-gray-400">PDF, DOC, DOCX up to 10MB</p>
+                        <p class="text-xs text-gray-400">PDF only up to 10MB</p>
                         <div class="mt-4 inline-block">
                             <button type="button" class="bg-blue-50 text-blue-600 font-semibold px-4 py-2 rounded-lg border border-blue-100 pointer-events-none" id="file-btn-text">Choose Files</button>
                         </div>
@@ -278,7 +278,24 @@
 <script>
     document.getElementById('file-input').addEventListener('change', function(e) {
         if(e.target.files.length > 0) {
-            document.getElementById('file-btn-text').textContent = e.target.files[0].name;
+            const file = e.target.files[0];
+            const ext = file.name.split('.').pop().toLowerCase();
+            
+            if (ext !== 'pdf') {
+                Swal.fire({
+                    title: 'Invalid File Type',
+                    text: 'Supporting documents must be in PDF format for in-app viewing. Please convert your file and try again.',
+                    icon: 'error',
+                    confirmButtonColor: '#3B82F6'
+                });
+                this.value = '';
+                document.getElementById('file-btn-text').textContent = 'Choose Files';
+                document.getElementById('file-btn-text').classList.remove('bg-blue-600', 'text-white');
+                document.getElementById('file-btn-text').classList.add('bg-blue-50', 'text-blue-600');
+                return;
+            }
+
+            document.getElementById('file-btn-text').textContent = file.name;
             document.getElementById('file-btn-text').classList.add('bg-blue-600', 'text-white');
             document.getElementById('file-btn-text').classList.remove('bg-blue-50', 'text-blue-600');
         } else {

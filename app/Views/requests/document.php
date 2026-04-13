@@ -9,6 +9,12 @@
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to Process
         </a>
+        <?php if(!empty($request['attachment_path'])): ?>
+        <button onclick="viewAttachment('<?= url($request['attachment_path']) ?>')" class="inline-flex items-center px-4 py-2 bg-white border-2 border-gray-900 text-gray-900 text-sm font-black rounded-lg hover:bg-gray-900 hover:text-white transition-all shadow-md group">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+            View Supporting Doc
+        </button>
+        <?php endif; ?>
         <?php if(in_array($request['status'], ['Approved', 'Rejected'])): ?>
         <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-black rounded-lg hover:bg-indigo-700 transition-all shadow-md group">
             <svg class="w-4 h-4 mr-2 text-indigo-200 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>

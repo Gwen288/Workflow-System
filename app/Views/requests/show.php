@@ -37,6 +37,15 @@
                 <p class="text-sm font-semibold text-gray-500">Submitted On</p>
                 <p><?= date('M j, Y H:i', strtotime($request['submission_date'])) ?></p>
             </div>
+            <?php if(!empty($request['attachment_path'])): ?>
+            <div class="col-span-2 sm:col-span-1">
+                <p class="text-sm font-semibold text-gray-400 uppercase tracking-tighter mb-1">Supporting Document</p>
+                <button onclick="viewAttachment('<?= url($request['attachment_path']) ?>')" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                    View Attachment
+                </button>
+            </div>
+            <?php endif; ?>
             <?php if (isset($linkedBudget) && $linkedBudget): 
                 $bMeta = json_decode($linkedBudget['metadata'], true);
             ?>

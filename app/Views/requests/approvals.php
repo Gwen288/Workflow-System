@@ -155,7 +155,13 @@
                                 <?php 
                                     $stageLabel = auth_user()['role'] . ' Review';
                                     if (isset($isMyRequests)) {
-                                        $stageLabel = ($req['status'] === 'Approved') ? 'Completed' : ($req['approver_name'] ? htmlspecialchars($req['approver_name']) . ' Reviewing' : 'System Processing');
+                                        if ($req['status'] === 'Approved') {
+                                            $stageLabel = 'Completed';
+                                        } elseif ($req['status'] === 'Rejected') {
+                                            $stageLabel = 'Action Required by Submitter';
+                                        } else {
+                                            $stageLabel = $req['approver_name'] ? htmlspecialchars($req['approver_name']) . ' Reviewing' : 'System Processing';
+                                        }
                                     }
                                 ?>
                                 <span class="text-gray-700 font-medium text-sm"><?= $stageLabel ?></span>
@@ -260,7 +266,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-gray-700 font-medium text-sm">${listType === 'myRequests' ? (req.approver_name ? req.approver_name + ' Reviewing' : 'System Processing') : '<?= htmlspecialchars(auth_user()['role']) ?> Review'}</span>
+                                    <span class="text-gray-700 font-medium text-sm">${listType === 'myRequests' ? (req.status === 'Approved' ? 'Completed' : (req.status === 'Rejected' ? 'Action Required by Submitter' : (req.approver_name ? req.approver_name + ' Reviewing' : 'System Processing'))) : '<?= htmlspecialchars(auth_user()['role']) ?> Review'}</span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center space-x-1.5 ${daysColorClass} font-medium text-sm">

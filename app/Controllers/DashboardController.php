@@ -190,7 +190,7 @@ class DashboardController extends Controller {
         
         // Filter for Finance Officer (Streamline)
         if (auth_user()['role'] === 'Finance Officer') {
-            $volumeByWorkflow = array_intersect_key($volumeByWorkflow, array_flip(['Fee Waiver', 'Procurement']));
+            $volumeByWorkflow = array_intersect_key($volumeByWorkflow, array_flip(['Fee Waiver', 'Procurement', 'Clearance']));
         }
 
         // 4. CLASSIC METRICS (For Screenshot View)
@@ -219,7 +219,8 @@ class DashboardController extends Controller {
         // Status Progress (Pending vs Approved per Workflow)
         $statusProgSql = "SELECT w.name, 
                           SUM(CASE WHEN r.status = 'Approved' THEN 1 ELSE 0 END) as approved,
-                          SUM(CASE WHEN r.status IN ('Pending', 'Escalated') THEN 1 ELSE 0 END) as pending
+                          SUM(CASE WHEN r.status IN ('Pending', 'Escalated') THEN 1 ELSE 0 END) as pending,
+                          COUNT(*) as total
                           FROM Request r 
                           JOIN Workflow w ON r.workflow_type = w.workflow_id
                           WHERE $scope GROUP BY w.workflow_id";

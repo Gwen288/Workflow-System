@@ -202,7 +202,7 @@ $cycleData = array_map(function($v) { return round($v, 1); }, array_column($brea
             <h3 class="text-md font-bold text-gray-800 mb-6">Current Workflow Status</h3>
             <div class="space-y-6">
                 <?php foreach($breaks['statusProgress'] as $idx => $sp): 
-                    $total = max(1, $sp['pending'] + $sp['approved']);
+                    $total = max(1, $sp['total'] ?? ($sp['pending'] + $sp['approved']));
                     $perc = round(($sp['approved'] / $total) * 100);
                     $color = ['#10b981', '#3b82f6', '#8b5cf6'][$idx % 3];
                 ?>

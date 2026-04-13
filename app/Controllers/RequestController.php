@@ -115,14 +115,17 @@ class RequestController extends Controller {
         // Handle file upload
         $attachmentPath = null;
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../../public/uploads/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9.\-_]/', '', basename($_FILES['attachment']['name']));
-            $targetPath = $uploadDir . $filename;
-            if (move_uploaded_file($_FILES['attachment']['tmp_name'], $targetPath)) {
-                $attachmentPath = '/uploads/' . $filename;
+            $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
+            if ($ext === 'pdf') {
+                $uploadDir = __DIR__ . '/../../public/uploads/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9.\-_]/', '', basename($_FILES['attachment']['name']));
+                $targetPath = $uploadDir . $filename;
+                if (move_uploaded_file($_FILES['attachment']['tmp_name'], $targetPath)) {
+                    $attachmentPath = '/uploads/' . $filename;
+                }
             }
         }
 
