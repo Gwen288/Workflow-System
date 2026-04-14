@@ -16,6 +16,9 @@ class RequestController extends Controller {
     }
 
     public function index() {
+        if (auth_user()['role'] !== 'Admin') {
+            $this->redirect('/dashboard');
+        }
         $requestModel = new Request();
         $requests = $requestModel->getWithDetails();
         $this->view('requests/index', ['requests' => $requests]);

@@ -38,22 +38,33 @@ class UserController extends Controller {
     }
 
     public function update($id) {
-        if ($id == auth()) { // Double-guard against self-updates via POST
+        $userModel = new User();
+        $existingUser = $userModel->find($id);
+
+        if (!$existingUser) {
             return $this->redirect('/users');
         }
+
+        $role = $_POST['role'] ?? $existingUser['role'];
         
-        $userModel = new User();
+        // Safety: Prevent an admin from changing their own role to avoid lockouts
+        if ($id == auth()) {
+            $role = $existingUser['role'];
+        }
         
         $data = [
-            'role' => $_POST['role'] ?? 'Student',
+            'role' => $role,
             'department' => $_POST['department'] ?? 'General'
         ];
 
         if ($userModel->update($id, $data)) {
-            // If the current admin is updating themselves, refresh the session
+            // Refresh session if updating current user
             if ($id == auth()) {
                 $_SESSION['user']['role'] = $data['role'];
                 $_SESSION['user']['department'] = $data['department'];
+                
+                // If it was a self-update, redirect to dashboard as they might have moved themselves out of Admin (though we blocked it above)
+                return $this->redirect('/dashboard');
             }
             return $this->redirect('/users');
         }

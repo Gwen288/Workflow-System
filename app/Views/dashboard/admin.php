@@ -34,13 +34,16 @@
                 <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">LIVE</span>
             </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-slate-100 dark:border-gray-700 shadow-sm group hover:border-indigo-500 transition-all duration-300">
+        <a href="<?= url('/requests') ?>" class="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-slate-100 dark:border-gray-700 shadow-sm group hover:border-indigo-500 transition-all duration-300 block">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-500 transition-colors">Total Throughput</p>
             <div class="flex items-end justify-between">
-                <h3 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight"><?= count($allRequests) ?></h3>
+                <div>
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight"><?= count($allRequests) ?></h3>
+                    <p class="text-[9px] font-black text-indigo-600 uppercase mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Launch Ledger &rarr;</p>
+                </div>
                 <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">LIFETIME</span>
             </div>
-        </div>
+        </a>
         <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-slate-100 dark:border-gray-700 shadow-sm group hover:border-indigo-500 transition-all duration-300">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-500 transition-colors">Avg Flow</p>
             <div class="flex items-end justify-between">

@@ -51,20 +51,18 @@
                     <svg class="w-5 h-5 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     <span class="ml-3 font-medium">Dashboard</span>
                 </a>
-                <?php if (auth_user() && !in_array(auth_user()['role'], ['Student', 'HOD', 'Admin'])): ?>
+                <?php if (auth_user() && !in_array(auth_user()['role'], ['Student', 'HOD'])): ?>
                 <a href="<?= url('/approvals') ?>" class="flex items-center px-5 py-3 mx-4 rounded-xl <?= strpos($_SERVER['REQUEST_URI'], '/approvals') !== false ? 'bg-blue-700/50 shadow-inner text-white block' : 'text-blue-100 hover:bg-blue-700/30 hover:text-white transition-colors' ?>">
                     <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span class="ml-3 font-medium">My Approvals</span>
                 </a>
                 <?php else: ?>
-                    <?php if (auth_user() && auth_user()['role'] !== 'Admin'): ?>
                     <a href="<?= url('/my-requests') ?>" class="flex items-center px-5 py-3 mx-4 rounded-xl <?= strpos($_SERVER['REQUEST_URI'], '/my-requests') !== false ? 'bg-blue-700/50 shadow-inner text-white block' : 'text-blue-100 hover:bg-blue-700/30 hover:text-white transition-colors' ?>">
                         <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                         <span class="ml-3 font-medium">My Requests</span>
                     </a>
-                    <?php endif; ?>
                 <?php endif; ?>
-                <?php if (auth_user() && !in_array(auth_user()['role'], ['CFO', 'Logistics', 'Admin'])): ?>
+                <?php if (auth_user() && !in_array(auth_user()['role'], ['CFO', 'Logistics'])): ?>
                 <a href="<?= url('/requests/create') ?>" class="flex items-center px-5 py-3 mx-4 rounded-xl <?= strpos($_SERVER['REQUEST_URI'], '/requests/create') !== false ? 'bg-blue-700/50 shadow-inner text-white block' : 'text-blue-100 hover:bg-blue-700/30 hover:text-white transition-all duration-200' ?>">
                     <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     <span class="ml-3 font-medium">Create Request</span>
@@ -79,6 +77,12 @@
                 <a href="<?= url('/analytics') ?>" class="flex items-center px-5 py-3 mx-4 rounded-xl <?= strpos($_SERVER['REQUEST_URI'], '/analytics') !== false ? 'bg-blue-700/50 shadow-inner text-white block' : 'text-blue-100 hover:bg-blue-700/30 hover:text-white transition-colors' ?>">
                     <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     <span class="ml-3 font-medium">Analytics</span>
+                </a>
+                <?php endif; ?>
+                <?php if (auth_user() && auth_user()['role'] === 'Admin'): ?>
+                <a href="<?= url('/requests') ?>" class="flex items-center px-5 py-3 mx-4 rounded-xl <?= (strpos($_SERVER['REQUEST_URI'], '/requests') !== false && strpos($_SERVER['REQUEST_URI'], '/requests/') === false && strpos($_SERVER['REQUEST_URI'], '/requests/create') === false) ? 'bg-blue-700/50 shadow-inner text-white block' : 'text-blue-100 opacity-80 hover:bg-blue-700/30 hover:opacity-100 hover:text-white transition-all duration-200' ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span class="ml-3 font-medium">All Requests</span>
                 </a>
                 <?php endif; ?>
                 <?php if (auth_user() && auth_user()['role'] === 'Admin'): ?>
